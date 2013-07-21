@@ -11,36 +11,178 @@ function getRegistryClass(){
 	return $reg;
 }
 
+/**
+ * -- DATABASE FUNCTIONS --
+ */
+
 function currentUser(){
 	global $firephp;
 	if(USE_FIREPHP){$firephp->log('CURR utilities.php, currentUser(), line '.__LINE__);}
 	
-	$reg = registry::singleton();
+	if(!isset($_SESSION['userId']) || $_SESSION['userId'] == '')
+		return FALSE;
+	
+	$userId = $_SESSION['userId'];
+	if(USE_FIREPHP){$firephp->log($userId,'--$userId at line '.__LINE__);}
+
+	$sql = 'SELECT *,people.id AS person_id FROM patients JOIN people ON (patients.person_id=people.id) WHERE patients.id='.$userId;
+
+	$user = _getFromDatabase($sql);
+	
+	return $user;
+}
+
+function currentCareTeam(){
+	global $firephp;
+	if(USE_FIREPHP){$firephp->log('CURR utilities.php, currentCareTeam(), line '.__LINE__);}
 	
 	if(!isset($_SESSION['userId']))
 		return FALSE;
 	
 	$userId = $_SESSION['userId'];
 	if(USE_FIREPHP){$firephp->log($userId,'--$userId at line '.__LINE__);}
-
+	
+	$sql = 'SELECT * FROM care_team WHERE patient_id='.$userId.' AND accepted=1';
+	
+	$reg = registry::singleton();
 	$dbConn = $reg->get('databaseConnectionSingleton');
-	$sql = 'SELECT *,people.id AS person_id FROM patients JOIN people ON (patients.person_id=people.id) WHERE patients.id='.$userId;
+	
 	if(USE_FIREPHP){$firephp->log(array($dbConn,$sql),'--$dbConn and $sql at line '.__LINE__);}
+	
 	$result = mysql_query($sql,$dbConn);
 	
 	if(is_resource($result)){
-		$user = mysql_fetch_assoc($result);
-		if(USE_FIREPHP){$firephp->log($user,'--$user at line '.__LINE__);}
+		$numRows = mysql_num_rows($result);
+		if($numRows > 0){
+			while($row = mysql_fetch_assoc($result)){
+				$return[] = $row;
+			}
+			foreach($return as $key => $teamMember){
+				$sql  = 'SELECT * FROM '.$teamMember['role'].' JOIN people ON (people.id=';
+				$sql .= $teamMember['role'].'.person_id) WHERE '.$teamMember['role'].'.id='.$teamMember['role_id'];
+				$result2 = mysql_query($sql,$dbConn);
+				$numRows = mysql_num_rows($result2);
+				if($numRows > 0){
+					$temp = mysql_fetch_assoc($result2);
+				}
+				// expand the $careTeam array to include information from "people" table
+				foreach($temp as $key2=>$tempValue)
+					$return[$key][$key2] = $tempValue;
+			}
+			unset($teamMember);
+		}else{
+			$return = FALSE;
+		}
 	}else{
 		if(USE_FIREPHP){$firephp->log('--Mysql call did not work, at line '.__LINE__);}
-		return FALSE;
+		$return = FALSE;
 	}
 	
-	if($user == NULL)
-		return FALSE;
-	else
-		return $user;
+	return $return;
 }
+
+function _getFromDatabase($sql){
+	global $firephp;
+	if(USE_FIREPHP){$firephp->log('CURR utilities.php, _getFromDatabase(), line '.__LINE__);}
+	
+	$reg = registry::singleton();
+	$dbConn = $reg->get('databaseConnectionSingleton');
+	
+	if(USE_FIREPHP){$firephp->log(array($dbConn,$sql),'--$dbConn and $sql at line '.__LINE__);}
+	
+	$result = mysql_query($sql,$dbConn);
+	
+	if(is_resource($result)){
+		$numRows = mysql_num_rows($result);
+		if($numRows == 1){
+			$return = mysql_fetch_assoc($result);
+		}elseif($numRows > 1){
+			while($row = mysql_fetch_assoc($result)){
+				$return[] = $row;
+			}
+		}else{
+			$return = FALSE;
+		}
+	}else{
+		if(USE_FIREPHP){$firephp->log('--Mysql call did not work, at line '.__LINE__);}
+		$return = FALSE;
+	}
+	if(USE_FIREPHP){$firephp->log($return,'--$return at line '.__LINE__);}
+	return $return;
+}
+
+/**
+ * Return the following:
+ * 0 if a treatment does not fall on the date given ($onDate)
+ * 1 if the treatment does fall, and the patient did NOT do it
+ * 2 if the treatment does fall, and the patient DID do it
+ */
+function treatmentScheduled($patientId,$onDate,$treatmentId,$treatmentType){
+	$todayWeekDay = date('w',strtotime($onDate)); // gets numerical day of week (0-6)
+	$todayMonthDay = date('j',strtotime($onDate)); // gets numerical day of month (1-31) without leading zeros
+	
+	// 1. Does treatment fall on that day?
+	switch($treatmentType){
+		case 'exercises':
+			$sql = 'SELECT * FROM exercises_patients JOIN exercises ON (exercises.id=exercises_patients.exercise_id) WHERE exercises_patients.exercise_id='.$treatmentId;
+			$lastDateField = 'last_date_exercised';
+			break;
+		case 'medications':
+			$sql = 'SELECT * FROM medications_patients JOIN medications ON (medications.id=medications_patients.medication_id) WHERE medications_patients.medications_id='.$treatmentId;
+			$lastDateField = 'last_date_taken';
+			break;
+		case 'othertreatments':
+			$sql = 'SELECT * FROM othertreatments_patients JOIN othertreatments ON (othertreatments.id=othertreatments_patients.othertreatments_id) WHERE othertreatments_patients.othertreatments_id='.$treatmentId;
+			$lastDateField = 'last_date_done';
+			break;
+	}
+	
+	$row = _getFromDatabase($sql);
+
+	$temp = '';	
+	
+	$dateLastTaken = strtotime($row[$lastDateField].' 00:00:00');
+	if($row['frequency'] == '1'){ // if 'frequency' == 1 == 'Once A Day', then automatically add to reminder list
+		$temp = $row;
+	}
+	if($row['frequency'] == 2){ // if 'frequency' == 2 == 'Once A Week', then compare to $todayWeekDay
+		$weekDay = date('w',$dateLastTaken);
+		if($weekDay == $todayWeekDay)
+			$temp = $row;
+	}
+	if($row['frequency'] == 3){ // if 'frequency' == 3 == 'Once A Month', then compare to $todayMonthDay
+		if(date('j',$dateLastTaken) == $todayMonthDay)
+			$temp = $row;
+	}
+
+	// 2. was the treatment done?
+	if($temp != ''){
+		switch($treatmentType){
+			case 'exercises':
+				$sql = 'SELECT * FROM exercises_done WHERE exercise_id='.$temp['exercise_id'].' AND date_exercised LIKE \'%'.date('Y-m-d',strtotime($onDate)).'%\'';
+				break;
+			case 'medications':
+				$sql = 'SELECT * FROM medications_taken WHERE medication_id='.$temp['medication_id'].' AND date_taken LIKE \'%'.date('Y-m-d',strtotime($onDate)).'%\'';
+				break;
+			case 'othertreatments':
+				$sql = 'SELECT * FROM othertreatments_taken WHERE othertreatments_id='.$temp['othertreatments_id'].' AND date_othertreatments_taken LIKE \'%'.date('Y-m-d',strtotime($onDate)).'%\'';
+				break;
+		}
+		$taken = _getFromDatabase($sql);
+		if(!$taken) // means there was a treatment for today, but it wasn't done
+			$return = 1;
+		else
+			$return = 2;
+	}else{
+		$return = 0;// means there was no treatment scheduled for that day
+	}
+	
+	return $return;
+}
+
+/**
+ * MISC FUNCTIONS
+ */
 
 function redirect($url){
 	// erase the output buffer, since the current page is going away, so we don't need any output
@@ -178,5 +320,9 @@ function resize_and_move_image($filename='',$filepath='',$targetheight=60,$targe
 	 */
 	imagedestroy($src);
 	imagedestroy($tmp);
+}
+
+function slope($x_1,$y_1,$x_2,$y_2){
+	return ($y_2-$y_1)/($x_2-$x_1);
 }
 ?>
