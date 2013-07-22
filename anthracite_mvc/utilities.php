@@ -81,6 +81,29 @@ function currentCareTeam(){
 	return $return;
 }
 
+function currentCareteamPatient(){
+	global $firephp;
+	if(USE_FIREPHP){$firephp->log('CURR utilities.php, currentUser(), line '.__LINE__);}
+	
+	if(!isset($_SESSION['userId']) || $_SESSION['userId'] == '')
+		return FALSE;
+	
+	$userId = $_SESSION['userId'];
+	if(USE_FIREPHP){$firephp->log($userId,'--$userId at line '.__LINE__);}
+
+	// find $userId in careteam table
+	$sql = 'SELECT * FROM careteam WHERE patient_id';
+	
+	// use that careteam record to determine the patient id that careteam supports
+	$sql = "SELECT * FROM $role WHERE id=$role_id";
+
+	$sql = 'SELECT *,people.id AS person_id FROM patients JOIN people ON (patients.person_id=people.id) WHERE patients.id='.$userId;
+
+	$user = _getFromDatabase($sql);
+	
+	return $user;
+}
+
 function _getFromDatabase($sql){
 	global $firephp;
 	if(USE_FIREPHP){$firephp->log('CURR utilities.php, _getFromDatabase(), line '.__LINE__);}

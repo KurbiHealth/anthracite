@@ -7,7 +7,7 @@ if(USE_FIREPHP){$firephp->log('CURR - bootstrap.php');}
  * this serves as a way to have a group of apps that all share the same core configurations
  */
 if(defined('APP_GROUP_CONFIGURATIONS') && APP_GROUP_CONFIGURATIONS != '')
-	require_once SERVER_ROOT_PATH.'anthracite_configurations/'.APP_GROUP_CONFIGURATIONS.'.php';
+	require_once ANTHRACITE_ROOT_PATH.'anthracite_configurations/'.APP_GROUP_CONFIGURATIONS.'.php';
 
 /**
  * REGISTRY
