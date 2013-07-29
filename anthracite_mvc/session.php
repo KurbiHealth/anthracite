@@ -3,6 +3,7 @@
 class session{
 	private static $instance;
 	public $currUserId;
+	public $currPatientId;
 	public $isLoggedIn;
 	private $currSession;
 	
@@ -37,13 +38,6 @@ class session{
 	public function getFlashMessage(){
 		if(isset($_SESSION['flashMessage']) && $_SESSION['flashMessage'] != '')
 			return $_SESSION['flashMessage'];
-	}
-	
-	public function initializeSession($user){
-		$_SESSION['loggedIn'] = 'y';
-		$this->isLoggedIn = TRUE;
-		$_SESSION['userId'] = $user['id'];
-		$this->currUserId = $user['id'];
 	}
 
 //		GET & SET VALUES		//

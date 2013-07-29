@@ -91,129 +91,64 @@ class frontController extends coreController{
 			$queryString = str_replace('notemplate_', '', $queryString);
 		}
 		if(USE_FIREPHP){$firephp->log($queryString, '$queryString after cleanup, line '.__LINE__);}
+		
+		// last authenticated page saved in Session, so that ajax calls from that page can come through without needing authentication
+		$Session->set('currAuthenticatedPage',$page);
 
 /**
  * Login functionality
- * There is an array, set in index.php or in the configurations file in the folder "anthracite_configurations", 
- * which lists which $page segments are protected, i.e. a user has to be logged in to see. Check if current 
- * $page is in that array, and if so, see if user is logged in. If not, redirect to a log-in page.
+ * There is an array, set in index.php, which lists which $page segments are protected, i.e. a user has to be logged in to see. 
+ * Check if current $page is in that array, and if so, see if user is logged in. If not, redirect to a log-in page.
  * 
  * If the request is coming to sign_up_result, it means that they just logged in. Check to see if there is a 
  * session variable set with an originalQuery, which means the user wanted to go to another page and was 
  * redirected because their session wasn't valid. If there is an "originalQuery", send the user to that page, 
  * otherwise send them to the home page.
  */
+ 
+ // Check to see if app has it's own authentication class that overrides core authentication class
+ 		if(is_file(MVC_APP_PATH.'mvc_overrides/authentication.php')){ // use 'library' instead of 'mvc_overrides'?
+ 			include MVC_APP_PATH.'mvc_overrides/authentication.php';
+			unset($Authentication);
+ 			$Authentication = new appAuthentication();
+ 		}
 
-		if(USE_FIREPHP){
-			if($Authentication->pageIsProtected())
-				$firephp->log('Page shows as protected (i.e. user must log in), line '.__LINE__); 
-			else
-				$firephp->log('Page does NOT show as protected (i.e. user must log in), line '.__LINE__);
+// check to see if authentication class wants to bypass the core authentication process altogether and do its own thing
+// this is more likely to happen if app has it's own authentication class
+// the custom authentication class will run from the skipFrontcontrollerAuthentication method
+		if(!$Authentication->skipFrontcontrollerAuthentication()){
 			
-			if($Session->getLoggedInStatus())
-				$firephp->log('Session shows user is logged in');
-			else
-				$firephp->log('Session shows user is NOT logged in');
-		}
-
-		if($queryString == SIGN_IN_URL || $queryString == SIGN_UP_URL){
-			
-// PAGE IS: sign_up or sign_in, continue
-			
-			if(USE_FIREPHP){$firephp->log( $queryString,'page requested is sign_in or sign_up, CONTINUING THROUGH, line '.__LINE__ );}
-
-		}else{
-		
-// IF NOT THE SIGN UP OR SIGN IN PAGE
-
-// USER IS: signing IN, /site/sign_in_result
+// Set up variables
+			$Authentication->setInitialVariables($queryString,$page,$action);
 			if(USE_FIREPHP){$firephp->log(array('ReferringQueryURL'=>$Request->getReferringQuery(), 'SIGN_IN_URL'=>SIGN_IN_URL, 'SIGN_UP_URL'=>SIGN_UP_URL, '$queryString'=>$queryString),'--Variables at line '.__LINE__);}
 
-			if($Request->getReferringQuery() == SIGN_IN_URL && $queryString == SIGN_IN_URL.'_result'){
-				if(USE_FIREPHP){$firephp->log('--At SIGN_IN_RESULT, line '.__LINE__);}	
-						
-				// if current request is coming from the sign-in url, then use the ->checkIsUser function to check
-				// whether the user has valid credentials
-				if($user = $Authentication->checkIsUser()){
-					if(USE_FIREPHP){$firephp->log('checked that user credentials are in database, signing in');}
-
-	 				// last authenticated page saved in Session, so that ajax calls from that page can come through without needing authentication
-					$Session->set('currAuthenticatedPage',$page);
-					$Session->initializeSession($user);
-					
-					if(USE_FIREPHP){$firephp->log($_SESSION,'$_SESSION, line '.__LINE__);}
-					
-					$homeUrl = ROOT_URL.LOGGED_IN_HOME_URL;
-					if(USE_FIREPHP){$firephp->log('redirecting to HOME_URL');}
-					ob_end_flush();
-					redirect($homeUrl);
-				}else{
-					$Session->set('queryString',$queryString);
-					if(USE_FIREPHP){$firephp->log('--User credentials not found in db, redirecting to sign_in page');}
-					ob_end_flush();
-					redirect(ROOT_URL.SIGN_IN_URL);
-				}
-				
-				if(USE_FIREPHP){$firephp->log( 'got to line '.__LINE__);}
-
-// USER IS: signing UP, /site/sign_up_result, i.e. user is in process of creating an account
-
-			}elseif($Request->getReferringQuery() == SIGN_UP_URL && $queryString == SIGN_UP_URL.'_result'){
-				
-				if(USE_FIREPHP){$firephp->log('--At SIGN_UP_RESULT, line '.__LINE__);}
-
-				// if current request is coming from the sign-in url, then use the ->checkIsUser function to check
-				// whether the user has valid credentials
-				if($user = $Authentication->checkSignUpIsValid()){
-					$Session->initializeSession($user);
-					// don't redirect the sign-up page to the user's home page, the sign_up_result page has links for a first time user
-					
-				}else{
+// page requested is the sign-in POST action, so take the appropriate steps
+			if($Authentication->userIsSigningIn()){
+				$result = $Authentication->signInUser();
+				if(!$result){
 					$signUpUrl = ROOT_URL.SIGN_UP_URL;
 					ob_end_flush();
 					redirect($signUpUrl);
 				}
-			}elseif(SKIP_LOGIN_FOR_DEV){
-// USER IS: allowed through, skipping login requirement for dev purposes
+			}
+		
+// page requested is the sign-up POST action, so take the appropriate steps
+			elseif($Authentication->userIsSigningUp()){
+				$Authentication->signUpUser();
+			}
 
-				if(USE_FIREPHP){$firephp->log('--Skipping login for dev purposes, line '.__LINE__);}
-
-// PAGE IS: protected. NO session.
-
-			}elseif(($Authentication->pageIsProtected() == TRUE) && ($Session->getLoggedInStatus() == FALSE)){
-				if(USE_FIREPHP){$firephp->log('--Page is protected, and not logged in, line '.__LINE__);}
-				// SKIP_LOGIN_FOR_DEV, if set to TRUE, will cause the app to skip this step
+// page requested can't be sent to user, so redirect them to default public page (sign, sign up, home pg)
+			elseif( !$Authentication->pageCanBeSentToUser() ){
 				$Session->setFlashMessage('You must sign in to see that page');
-				$Session->set('queryString',$queryString);
-				if(USE_FIREPHP){$firephp->log('redirecting user to sign_in page, line '.__LINE__);}
 				ob_end_flush();
 				redirect(ROOT_URL.SIGN_IN_URL);
-
-// PAGE IS: protected. Session EXISTS, continue
-	
-			}elseif($Authentication->pageIsProtected() && $Session->getLoggedInStatus() == TRUE){
-				if(USE_FIREPHP){$firephp->log('--Page is protected, session exists, continue on, line '.__LINE__);}
-
-// PAGE IS NOT protected, continue
-
-			}elseif(!$Authentication->pageIsProtected()){
-				if(USE_FIREPHP){$firephp->log('--Page is NOT protected, continue on, line '.__LINE__);}
-
-// SOME WEIRD CONDITION I COULDN'T COME UP WITH
-				
-			}else{
-				// save current query in session flash variable
-				$Session->set('queryString',$queryString);
-				$Session->setFlashMessage('You must log in to see that page.');
-				// send to default sign-in page
-				$signinUrl = ROOT_URL.SIGN_UP_URL;
-				ob_end_flush();
-				redirect($signinUrl);
 			}
-			
-			if(USE_FIREPHP){$firephp->log('Finished deciding what path to take, line '.__LINE__);}
 
-		}
+// page requested can be sent to user, so continue 
+// run any post authentication code, may not be any
+			$Authentication->postAuthenticationActions();
+
+		} // end of: if(!$auth->skipFrontcontrollerAuthentication())
 
 		/**
 		 * Check permissions
@@ -237,6 +172,7 @@ class frontController extends coreController{
 
 		if(USE_FIREPHP){$firephp->log('loading mvc MODEL class, line '.__LINE__);}
 		$Model = $Loader->loadAppModel($page);
+
 		if(!$Model)
 			die("Couldn't find that page and action (".$page.",".$action.") in the model directory in Front Controller on line 98.");
 		  
@@ -277,6 +213,7 @@ class frontController extends coreController{
 		  /**
 		   * Kick off the next phase in the life of a page request coming through the loving hands of the Anthracite framework
 		   */
+
 		  $CONTROLLER->start($page,$action,$data);
 	 }
 

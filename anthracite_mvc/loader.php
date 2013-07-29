@@ -61,7 +61,7 @@ class Loader{
 
 	function loadAppModel($name){
 		$path = MVC_APP_PATH.'app/models/';
-		
+	
 		if(!class_exists('coreModel')){
 			require_once MVC_CORE_PATH.'coreModel.php';
 		}
@@ -70,12 +70,14 @@ class Loader{
 		if(!class_exists('appModel')){
 			require_once $path.'appModel.php';
 		}
+	
 		// instantiate the class
 		$fileName = $path.$name.'.php';
 		if(is_file($fileName))
 			require_once $fileName;
 		else
 			return FALSE;
+
 		$obj = new $name;
 		return $obj;
 	}

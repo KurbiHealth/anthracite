@@ -18,14 +18,17 @@ function getRegistryClass(){
 function currentUser(){
 	global $firephp;
 	if(USE_FIREPHP){$firephp->log('CURR utilities.php, currentUser(), line '.__LINE__);}
-	
+
 	if(!isset($_SESSION['userId']) || $_SESSION['userId'] == '')
 		return FALSE;
 	
 	$userId = $_SESSION['userId'];
 	if(USE_FIREPHP){$firephp->log($userId,'--$userId at line '.__LINE__);}
 
-	$sql = 'SELECT *,people.id AS person_id FROM patients JOIN people ON (patients.person_id=people.id) WHERE patients.id='.$userId;
+	// accomodate different roles being predominant in various apps
+	$role = USER_ROLE;
+	
+	$sql = 'SELECT *,people.id AS person_id,'.$role.'.id AS id FROM '.$role.' JOIN people ON ('.$role.'.person_id=people.id) WHERE '.$role.'.id='.$userId;
 
 	$user = _getFromDatabase($sql);
 	
@@ -33,24 +36,37 @@ function currentUser(){
 }
 
 function currentCareTeam(){
+	// initialize
 	global $firephp;
 	if(USE_FIREPHP){$firephp->log('CURR utilities.php, currentCareTeam(), line '.__LINE__);}
 	
 	if(!isset($_SESSION['userId']))
 		return FALSE;
 	
-	$userId = $_SESSION['userId'];
-	if(USE_FIREPHP){$firephp->log($userId,'--$userId at line '.__LINE__);}
-	
-	$sql = 'SELECT * FROM care_team WHERE patient_id='.$userId.' AND accepted=1';
-	
 	$reg = registry::singleton();
 	$dbConn = $reg->get('databaseConnectionSingleton');
 	
+	// get values from session
+	$userId = $_SESSION['userId'];
+	if(USE_FIREPHP){$firephp->log($userId,'--$userId at line '.__LINE__);}
+	$role = $_SESSION['userRole'];
+	
+	// 1. get all care team members
+	// 1a. get the user's record
+	$sql = 'SELECT * FROM care_team WHERE role_id='.$userId;
+	$result = mysql_query($sql,$dbConn);
+	if(is_resource($result)){
+		$numRows = mysql_num_rows($result);
+		if($numRows > 0){
+			$userRecord = mysql_fetch_assoc($result);
+		}
+	}
+	
+	// 1b. use the user's record to get all members of the careteam
+	$sql = 'SELECT * FROM care_team WHERE patient_id='.$userRecord['patient_id'].' AND accepted=1';
 	if(USE_FIREPHP){$firephp->log(array($dbConn,$sql),'--$dbConn and $sql at line '.__LINE__);}
 	
 	$result = mysql_query($sql,$dbConn);
-	
 	if(is_resource($result)){
 		$numRows = mysql_num_rows($result);
 		if($numRows > 0){
@@ -61,8 +77,8 @@ function currentCareTeam(){
 				$sql  = 'SELECT * FROM '.$teamMember['role'].' JOIN people ON (people.id=';
 				$sql .= $teamMember['role'].'.person_id) WHERE '.$teamMember['role'].'.id='.$teamMember['role_id'];
 				$result2 = mysql_query($sql,$dbConn);
-				$numRows = mysql_num_rows($result2);
-				if($numRows > 0){
+				$numRows2 = mysql_num_rows($result2);
+				if($numRows2 > 0){
 					$temp = mysql_fetch_assoc($result2);
 				}
 				// expand the $careTeam array to include information from "people" table
@@ -78,38 +94,111 @@ function currentCareTeam(){
 		$return = FALSE;
 	}
 	
+	// 2. add the patient if it's not the current user
+	if($userRecord['patient_id'] != $userId){
+		$sql = 'SELECT * FROM patients JOIN people ON (patients.person_id=people.id) WHERE patients.id='.$userRecord['patient_id'];
+		$result = mysql_query($sql,$dbConn);
+		if($numRows2 > 0){
+			$temp = mysql_fetch_assoc($result);
+		}
+		// expand the $careTeam array to include information from "people" table
+		$return[] = $temp;
+	}
+	
 	return $return;
 }
 
-function currentCareteamPatient(){
+function currentCareteamPatient($role=''){
+	// id has to equal patient_id
 	global $firephp;
-	if(USE_FIREPHP){$firephp->log('CURR utilities.php, currentUser(), line '.__LINE__);}
-	
+	if(USE_FIREPHP){$firephp->log('CURR utilities.php, currentUser(), line '.__LINE__);}	
 	if(!isset($_SESSION['userId']) || $_SESSION['userId'] == '')
 		return FALSE;
-	
-	$userId = $_SESSION['userId'];
-	if(USE_FIREPHP){$firephp->log($userId,'--$userId at line '.__LINE__);}
+
+	// get values from session
+	$userRoleId = $_SESSION['userId'];
+	if(USE_FIREPHP){$firephp->log($userRoleId,'--$userId at line '.__LINE__);}
 
 	// find $userId in careteam table
-	$sql = 'SELECT * FROM careteam WHERE patient_id';
+	$sql = 'SELECT * FROM care_team WHERE role_id='.$userRoleId.' LIMIT 1';
+	$careTeam = _getFromDatabase($sql);
 	
 	// use that careteam record to determine the patient id that careteam supports
-	$sql = "SELECT * FROM $role WHERE id=$role_id";
-
-	$sql = 'SELECT *,people.id AS person_id FROM patients JOIN people ON (patients.person_id=people.id) WHERE patients.id='.$userId;
-
-	$user = _getFromDatabase($sql);
+	$patientId = $careTeam['patient_id'];
 	
-	return $user;
+	// get patient data
+	$sql = 'SELECT * FROM patients JOIN people ON (patients.person_id=people.id) WHERE patients.id='.$patientId;
+	$patientFields = _getFromDatabase($sql);
+	
+	return $patientFields;
+}
+
+function getAllPatientsCareTeams(){
+	$reg = registry::singleton();
+	$dbConn = $reg->get('databaseConnectionSingleton');
+	
+	$userId = $_SESSION['userId'];
+	$role = $_SESSION['userRole'];
+	
+	// 1. get all care team members
+	// 1a. get the user's record
+	$sql = 'SELECT * FROM care_team WHERE role_id='.$userId;
+	$result = mysql_query($sql,$dbConn);
+	if(is_resource($result)){
+		$numRows = mysql_num_rows($result);
+		if($numRows > 0){
+			while($row = mysql_fetch_assoc($result)){
+				$userRecords[] = $row;
+			}
+		}
+	}
+	
+	// 1b. use the user's record to get all members of the careteam
+	$return = array();
+	foreach($userRecords as $userRecord){
+		$tempReturn = array();
+		$sql = 'SELECT * FROM care_team WHERE patient_id='.$userRecord['patient_id'].' AND accepted=1';
+		if(USE_FIREPHP){$firephp->log(array($dbConn,$sql),'--$dbConn and $sql at line '.__LINE__);}
+		
+		$result = mysql_query($sql,$dbConn);
+		if(is_resource($result)){
+			$numRows = mysql_num_rows($result);
+			if($numRows > 0){
+				while($row = mysql_fetch_assoc($result)){
+					$tempReturn[] = $row;
+				}
+				foreach($tempReturn as $key => $teamMember){
+					$sql  = 'SELECT * FROM '.$teamMember['role'].' JOIN people ON (people.id=';
+					$sql .= $teamMember['role'].'.person_id) WHERE '.$teamMember['role'].'.id='.$teamMember['role_id'];
+					$result2 = mysql_query($sql,$dbConn);
+					$numRows2 = mysql_num_rows($result2);
+					if($numRows2 > 0){
+						$temp = mysql_fetch_assoc($result2);
+					}
+					// expand the $careTeam array to include information from "people" table
+					foreach($temp as $key2=>$tempValue)
+						$tempReturn[$key][$key2] = $tempValue;
+				}
+				unset($teamMember);
+			}else{
+				$return = FALSE;
+			}
+		}else{
+			if(USE_FIREPHP){$firephp->log('--Mysql call did not work, at line '.__LINE__);}
+			$return = FALSE;
+		}
+		
+		$return[] = $tempReturn;
+	}
+	
+	return $return;
 }
 
 function _getFromDatabase($sql){
 	global $firephp;
 	if(USE_FIREPHP){$firephp->log('CURR utilities.php, _getFromDatabase(), line '.__LINE__);}
 	
-	$reg = registry::singleton();
-	$dbConn = $reg->get('databaseConnectionSingleton');
+	$dbConn = getDbConnection();
 	
 	if(USE_FIREPHP){$firephp->log(array($dbConn,$sql),'--$dbConn and $sql at line '.__LINE__);}
 	
@@ -119,12 +208,15 @@ function _getFromDatabase($sql){
 		$numRows = mysql_num_rows($result);
 		if($numRows == 1){
 			$return = mysql_fetch_assoc($result);
+			if(USE_FIREPHP){$firephp->log($return,'$return at line '.__LINE__);}
 		}elseif($numRows > 1){
 			while($row = mysql_fetch_assoc($result)){
 				$return[] = $row;
 			}
+			if(USE_FIREPHP){$firephp->log($return,'$return at line '.__LINE__);}
 		}else{
 			$return = FALSE;
+			if(USE_FIREPHP){$firephp->log($return,'$return at line '.__LINE__);}
 		}
 	}else{
 		if(USE_FIREPHP){$firephp->log('--Mysql call did not work, at line '.__LINE__);}
@@ -132,6 +224,12 @@ function _getFromDatabase($sql){
 	}
 	if(USE_FIREPHP){$firephp->log($return,'--$return at line '.__LINE__);}
 	return $return;
+}
+
+function getDbConnection(){
+	$reg = registry::singleton();
+	$dbConn = $reg->get('databaseConnectionSingleton');
+	return $dbConn;
 }
 
 /**
@@ -210,7 +308,7 @@ function treatmentScheduled($patientId,$onDate,$treatmentId,$treatmentType){
 function redirect($url){
 	// erase the output buffer, since the current page is going away, so we don't need any output
 	ob_get_clean();
-	
+		
 	// make sure the cookie made it to the browser, in case this redirect is for the sign-in process
 	$params = session_get_cookie_params();
 	setcookie(session_name(), session_id(), 0,$params["path"], $params["domain"],$params["secure"]);

@@ -103,9 +103,10 @@ if(USE_FIREPHP){$firephp->log($_COOKIE,'CURR bootstrap.php, $_COOKIE at line '._
 
 if(!class_exists('coreController'))
 	require_once MVC_CORE_PATH.'coreController.php';
-	
+
 $frontControllerName = 'frontController';
 $FrontController = $Loader->loadClass($frontControllerName);
+
 $FrontController->start();
 
 ?>
