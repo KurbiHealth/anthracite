@@ -134,15 +134,16 @@ function currentCareteamPatient($role=''){
 }
 
 function getAllPatientsCareTeams(){
+	global $firephp;
 	$reg = registry::singleton();
 	$dbConn = $reg->get('databaseConnectionSingleton');
-	
+
 	$userId = $_SESSION['userId'];
 	$role = $_SESSION['userRole'];
 	
 	// 1. get all care team members
 	// 1a. get the user's record
-	$sql = 'SELECT * FROM care_team WHERE role_id='.$userId;
+	$sql = 'SELECT * FROM care_team WHERE role_id='.$userId.' AND accepted=1';
 	$result = mysql_query($sql,$dbConn);
 	if(is_resource($result)){
 		$numRows = mysql_num_rows($result);
@@ -152,7 +153,7 @@ function getAllPatientsCareTeams(){
 			}
 		}
 	}
-	
+echo '<pre>';print_r($userRecords);echo '</pre>';
 	// 1b. use the user's record to get all members of the careteam
 	$return = array();
 	foreach($userRecords as $userRecord){
@@ -167,6 +168,7 @@ function getAllPatientsCareTeams(){
 				while($row = mysql_fetch_assoc($result)){
 					$tempReturn[] = $row;
 				}
+echo '<pre>';print_r($tempReturn);echo '</pre>';
 				foreach($tempReturn as $key => $teamMember){
 					$sql  = 'SELECT * FROM '.$teamMember['role'].' JOIN people ON (people.id=';
 					$sql .= $teamMember['role'].'.person_id) WHERE '.$teamMember['role'].'.id='.$teamMember['role_id'];
@@ -189,6 +191,46 @@ function getAllPatientsCareTeams(){
 		}
 		
 		$return[] = $tempReturn;
+	}
+exit;	
+	return $return;
+}
+
+function getAllPatientsForDoctor(){
+	global $firephp;
+	$reg = registry::singleton();
+	$dbConn = $reg->get('databaseConnectionSingleton');
+
+	$userId = $_SESSION['userId'];
+	$role = $_SESSION['userRole'];
+	
+	// 1. get all care team members
+	// 1a. get the user's record
+	$sql = 'SELECT * FROM care_team WHERE role_id='.$userId.' AND accepted=1';
+	$result = mysql_query($sql,$dbConn);
+	if(is_resource($result)){
+		$numRows = mysql_num_rows($result);
+		if($numRows > 0){
+			while($row = mysql_fetch_assoc($result)){
+				$userRecords[] = $row;
+			}
+		}
+	}
+
+	// 1b. use the user's record to get all members of the careteam
+	$return = array();
+	foreach($userRecords as $count => $userRecord){
+		$tempReturn = array();
+		$sql = 'SELECT * FROM patients JOIN people ON (patients.person_id=people.id) WHERE patients.id='.$userRecord['patient_id'];
+		if(USE_FIREPHP){$firephp->log(array($dbConn,$sql),'--$dbConn and $sql at line '.__LINE__);}
+		
+		$result = mysql_query($sql,$dbConn);
+		if(is_resource($result)){
+			$numRows = mysql_num_rows($result);
+			if($numRows > 0){
+				$return[] = mysql_fetch_assoc($result);
+			}
+		}
 	}
 	
 	return $return;
