@@ -214,7 +214,11 @@ function getAllPatientsForDoctor(){
 			while($row = mysql_fetch_assoc($result)){
 				$userRecords[] = $row;
 			}
+		}else{
+			return FALSE;
 		}
+	}else{
+		return FALSE;
 	}
 
 	// 1b. use the user's record to get all members of the careteam
