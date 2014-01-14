@@ -31,6 +31,8 @@ function currentUser(){
 	$sql = 'SELECT *,people.id AS person_id,'.$role.'.id AS id FROM '.$role.' JOIN people ON ('.$role.'.person_id=people.id) WHERE '.$role.'.id='.$userId;
 
 	$user = _getFromDatabase($sql);
+
+/* ---------- ADD DECRYPTION HERE ---------- */
 	
 	return $user;
 }
@@ -81,6 +83,9 @@ function currentCareTeam(){
 				if($numRows2 > 0){
 					$temp = mysql_fetch_assoc($result2);
 				}
+				
+/* ---------- ADD DECRYPTION HERE ---------- */
+				
 				// expand the $careTeam array to include information from "people" table
 				foreach($temp as $key2=>$tempValue)
 					$return[$key][$key2] = $tempValue;
@@ -101,6 +106,9 @@ function currentCareTeam(){
 		if($numRows2 > 0){
 			$temp = mysql_fetch_assoc($result);
 		}
+		
+/* ---------- ADD DECRYPTION HERE ---------- */
+		
 		// expand the $careTeam array to include information from "people" table
 		$return[] = $temp;
 	}
@@ -130,6 +138,8 @@ function currentCareteamPatient($role=''){
 	$sql = 'SELECT * FROM patients JOIN people ON (patients.person_id=people.id) WHERE patients.id='.$patientId;
 	$patientFields = _getFromDatabase($sql);
 	
+/* ---------- ADD DECRYPTION HERE ---------- */
+	
 	return $patientFields;
 }
 
@@ -140,7 +150,9 @@ function getAllPatientsCareTeams(){
 
 	$userId = $_SESSION['userId'];
 	$role = $_SESSION['userRole'];
-	
+echo $userId.'<br/>';
+echo $role.'<br/>';exit;
+
 	// 1. get all care team members
 	// 1a. get the user's record
 	$sql = 'SELECT * FROM care_team WHERE role_id='.$userId.' AND accepted=1';
@@ -154,6 +166,7 @@ function getAllPatientsCareTeams(){
 		}
 	}
 echo '<pre>';print_r($userRecords);echo '</pre>';
+
 	// 1b. use the user's record to get all members of the careteam
 	$return = array();
 	foreach($userRecords as $userRecord){
@@ -174,6 +187,9 @@ echo '<pre>';print_r($tempReturn);echo '</pre>';
 					$sql .= $teamMember['role'].'.person_id) WHERE '.$teamMember['role'].'.id='.$teamMember['role_id'];
 					$result2 = mysql_query($sql,$dbConn);
 					$numRows2 = mysql_num_rows($result2);
+					
+/* ---------- ADD DECRYPTION HERE ---------- */
+					
 					if($numRows2 > 0){
 						$temp = mysql_fetch_assoc($result2);
 					}
@@ -235,6 +251,9 @@ function getAllPatientsForDoctor(){
 				$return[] = mysql_fetch_assoc($result);
 			}
 		}
+		
+/* ---------- ADD DECRYPTION HERE ---------- */
+		
 	}
 	
 	return $return;
@@ -491,5 +510,16 @@ function resize_and_move_image($filename='',$filepath='',$targetheight=60,$targe
 
 function slope($x_1,$y_1,$x_2,$y_2){
 	return ($y_2-$y_1)/($x_2-$x_1);
+}
+
+function sendMessage($personId,$textonlyMessage,$formattedMessage){
+	if(empty($personId) || empty($textonlyMessage) || empty($formattedMessage))
+		return FALSE;
+	
+	// get person's preferred way of receiving messages
+	// NOTE: if there is no access to the message_preferences table or if there is no data about preference,
+	// default to sending an email. If there is no email address for person, return FALSE or exception
+	
+	
 }
 ?>

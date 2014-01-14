@@ -182,17 +182,24 @@
 		// PRE-PROCESS THE QUERY
 		
 		/**
-		 * @todo Include sanitization steps into the PRE-PROCESS snd the PROCESS steps of this function. In pre-process focus on sql injections, and in both pre and post process focus on cross-site injections.
+		 * @todo Include sanitization steps into the PRE-PROCESS snd the PROCESS steps of this function. In pre-process 
+		 * focus on sql injections, and in both pre and post process focus on cross-site injections.
 		 */
 		
 		if(preg_match('`select`',$sql,$matches) || preg_match('`SELECT`',$sql,$matches)){
 			
 		}
 		if(preg_match('`update`',$sql,$matches) || preg_match('`UPDATE`',$sql,$matches)){
-			
+			// decode PPI if needed
+			if(function_exists(array($this,'decodePPI'))){
+				$result = $this->decodePPI($result);
+			}
 		}
 		if(preg_match('`insert\sinto`',$sql,$matches) || preg_match('`INSERT\sINTO`',$sql,$matches)){
-			
+// decode PPI if needed
+/*if(function_exists(array($this,'encodePPI'))){
+	$result = $this->encodePPI($result);
+}*/
 		}
 		if(preg_match('`delete`',$sql,$matches) || preg_match('`DELETE`',$sql,$matches)){
 			
@@ -247,6 +254,11 @@
 		// insert ID
 		if(isset($insertId))
 			$this->sqlInsertId = $insertId;
+		
+// decode PPI if needed
+/*if(function_exists(array($this,'decodePPI'))){
+	$result = $this->decodePPI($result);
+}*/
 		
 		if(!$err)
 			return $result;
@@ -367,6 +379,31 @@
 		$return = $year.'-'.$month.'-'.$day.' '.$hour.':'.$minute.':'.$second;
 		return $return;
 	}
- }
+
+/**
+ * ENCRYPTION
+ */
+
+	var $skey = ""; // you can change it
+	
+	public function encode($value){ 
+        if(!$value){return false;}
+        $text = $value;
+        $iv_size = mcrypt_get_iv_size(MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB);
+        $iv = mcrypt_create_iv($iv_size, MCRYPT_RAND);
+        $crypttext = mcrypt_encrypt(MCRYPT_RIJNDAEL_256, $this->skey, $text, MCRYPT_MODE_ECB, $iv);
+        return trim($crypttext); 
+    }
+
+    public function decode($value){
+        if(!$value){return false;}
+        $crypttext = $value; 
+        $iv_size = mcrypt_get_iv_size(MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB);
+        $iv = mcrypt_create_iv($iv_size, MCRYPT_RAND);
+        $decrypttext = mcrypt_decrypt(MCRYPT_RIJNDAEL_256, $this->skey, $crypttext, MCRYPT_MODE_ECB, $iv);
+        return trim($decrypttext);
+    }
+	
+}
 
 ?>
