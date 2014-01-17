@@ -28,9 +28,11 @@ class authentication{
 
 	public function pageCanBeSentToUser(){
 
+		if(USE_FIREPHP){$this->firephp->log( 'in class Authentication, line '.__LINE__ );}
+		
 		// if user is requesting the sign up or sign in pages, then this is allowed
 		if($this->queryString == SIGN_IN_URL || $this->queryString == SIGN_UP_URL){			
-			if(USE_FIREPHP){$this->firephp->log( $this->queryString,'in class Authentication, page requested is sign_in or sign_up, CONTINUING THROUGH, line '.__LINE__ );}
+			if(USE_FIREPHP){$this->firephp->log( $this->queryString,'--Page requested is sign_in or sign_up, CONTINUING THROUGH, line '.__LINE__ );}
 			$return = TRUE;
 		}
 		
@@ -102,7 +104,7 @@ class authentication{
 		'referring query, SIGN_UP_URL, queryString, SIGN_UP_URL_result');
 		
 		if($this->Request->getReferringQuery() == SIGN_UP_URL && $this->queryString == SIGN_UP_URL.'_result'){
-			if($this->checkThatRequestIsPost){
+			if($this->checkThatRequestIsPost()){
 				$return = TRUE;
 			}else{
 				$return = FALSE;
@@ -136,7 +138,7 @@ class authentication{
 		$result = mysql_query($sql,$dbConn);
 		
 		$row = mysql_fetch_assoc($result);
-		
+	
 		if($row != FALSE){
 			// using "echo" sends back the message to the originating ajax call
 			$this->Session->setFlashMessage( 'Your information is already in our database. Please sign-in with this email and your password. If you do not remember your password, please click on "Password Recovery".');
@@ -150,7 +152,7 @@ class authentication{
 		$sql = "INSERT INTO people (first_name,last_name,email,password) VALUES ('{$post['first_name']}','{$post['last_name']}','{$post['email']}','{$post['password']}')";
 		$result = mysql_query($sql,$dbConn);
 
-		if(USE_FIREPHP){$this->firephp->log(array('$arr'=>$arr,'$this'=>$this),'--SQL, inserted into "people" table at line '.__LINE__);}
+		if(USE_FIREPHP){$this->firephp->log(array('$this'=>$this),'--SQL, inserted into "people" table at line '.__LINE__);}
 		$peopleId = mysql_insert_id($dbConn);
 		$this->firephp->log(__LINE__);
 		if(mysql_errno() > 0 || $peopleId == ''){

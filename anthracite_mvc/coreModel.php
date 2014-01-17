@@ -150,6 +150,49 @@
 		}
 	}
 	
+	public function doSelect($table = '',$where = ''){
+		$firephp = $this->firephp;
+		$count = 0;
+		$this->setErrorFlag(FALSE);
+		
+		if($table == '' || empty($where))
+			return FALSE;
+		
+		$sql = 'SELECT FROM '.$table.' WHERE ';
+		
+		foreach($arr as $field=>$value){
+			$value = $this->sanitize($value);
+			if($count == 0)
+				$comma = '';
+			else
+				$comma = ',';
+			$sql .= $comma.$field.'="'.$value.'"';
+			$count++;
+		}
+
+		$this->sql = $sql;
+		
+		// DO QUERY
+		$result = mysql_query($sql);
+		
+		// GET ARRAY FROM $result
+		
+		
+		// DECRYPT FIELDS IF NEEDED
+		
+		
+		// ERROR CHECKING
+		if(mysql_errno() != 0){
+			// I'm trying to decouple the parts of this function, and also make the code easier to read
+			$this->setError(array('Sql'=>$sql,'Error'=>mysql_error()));
+			$this->setErrorFlag(TRUE);
+			if(USE_FIREPHP){$firephp->log( array('error'=>mysql_error(),'sql'=>$sql),'CURR coreModel.php,SQL ERROR');}
+			return FALSE;
+		}else{
+			return TRUE;
+		}
+	}
+	
 	public function doDelete($table='',$id=''){
 		if($table == '' || $id == '')
 			return FALSE;
@@ -405,5 +448,3 @@
     }
 	
 }
-
-?>
