@@ -124,7 +124,6 @@ class frontController extends coreController{
 
 // page requested is the sign-in POST action, so take the appropriate steps
 			if($Authentication->userIsSigningIn()){
-echo 'front, signing IN, line '.__LINE__;exit;
 				$result = $Authentication->signInUser();
 				if(!$result){
 					$signUpUrl = ROOT_URL.SIGN_UP_URL;
@@ -135,13 +134,11 @@ echo 'front, signing IN, line '.__LINE__;exit;
 		
 // page requested is the sign-up POST action, so take the appropriate steps
 			elseif($Authentication->userIsSigningUp()){
-echo 'front, signing UP, line '.__LINE__;exit;
 				$Authentication->signUpUser();
 			}
 
 // page requested can't be sent to user, so redirect them to default public page (sign, sign up, home pg)
 			elseif( !$Authentication->pageCanBeSentToUser() ){
-echo 'front, wtf?, line '.__LINE__;exit;
 				$Session->setFlashMessage('You must sign in to see that page');
 				ob_end_flush();
 				redirect(ROOT_URL.SIGN_IN_URL);
@@ -221,5 +218,3 @@ echo 'front, wtf?, line '.__LINE__;exit;
 	 }
 
 }
-
-?>

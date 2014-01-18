@@ -28,8 +28,18 @@ class session{
 	}
 	
 	public function getLoggedInStatus(){
-		return $this->isLoggedIn;
-	}
+		// this needs to be expanded to check whether session has expired or not
+		// PHP_SESSION_NONE if sessions are enabled, but none exists.
+		// PHP_SESSION_ACTIVE if sessions are enabled, and one exists.
+		if($this->isLoggedIn == TRUE && session_status() == PHP_SESSION_NONE){
+			$this->isLoggedIn = FALSE;
+			return FALSE;
+		}
+		if($this->isLoggedIn == FALSE)
+			return FALSE;
+		else
+			return TRUE;
+	}	
 	
 	public function setFlashMessage($message){
 		$_SESSION['flashMessage'] = $message;

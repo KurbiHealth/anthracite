@@ -37,7 +37,7 @@ class authentication{
 		}
 		
 		// if protected page, and no session established (user hasn't logged in or doesn't have an account), do not allow
-		if(($this->pageIsProtected() == TRUE) && ($this->Session->getLoggedInStatus() == FALSE)){
+		if($this->pageIsProtected() && ($this->Session->getLoggedInStatus() == FALSE)){
 			if(USE_FIREPHP){$this->firephp->log('--Page is protected, and not logged in, line '.__LINE__);}
 			$this->Session->set('queryString',$this->queryString);
 			$return = FALSE;
@@ -135,10 +135,9 @@ class authentication{
 		 */
 		$sql = 'SELECT * FROM people WHERE email=\''.$post['email'].'\'';
 		$dbConn = getDbConnection();
-		$result = mysql_query($sql,$dbConn);
-		
+		$result = mysql_query($sql,$dbConn);	
 		$row = mysql_fetch_assoc($result);
-	
+		
 		if($row != FALSE){
 			// using "echo" sends back the message to the originating ajax call
 			$this->Session->setFlashMessage( 'Your information is already in our database. Please sign-in with this email and your password. If you do not remember your password, please click on "Password Recovery".');
@@ -151,10 +150,9 @@ class authentication{
 		 */
 		$sql = "INSERT INTO people (first_name,last_name,email,password) VALUES ('{$post['first_name']}','{$post['last_name']}','{$post['email']}','{$post['password']}')";
 		$result = mysql_query($sql,$dbConn);
-
 		if(USE_FIREPHP){$this->firephp->log(array('$this'=>$this),'--SQL, inserted into "people" table at line '.__LINE__);}
 		$peopleId = mysql_insert_id($dbConn);
-		$this->firephp->log(__LINE__);
+
 		if(mysql_errno() > 0 || $peopleId == ''){
 			if(USE_FIREPHP){$this->firephp->log($this->sqlError,'--Problem inserting into "people" table at line '.__LINE__);}
 			if(ob_get_contents() != ''){ob_flush();}
@@ -162,22 +160,23 @@ class authentication{
 			redirect(ROOT_URL.SIGN_IN_URL);
 		}
 		if(USE_FIREPHP){$this->firephp->log('--SQL, finished inserting into "people" table at line '.__LINE__);}
-		
+
 		/**
 		 * Do insertion into role table
 		 */
-		$sql = "INSERT INTO {USER_ROLE} (person_id) VALUES ('{$peopleId}')";
+		$sql = "INSERT INTO ".USER_ROLE." (person_id) VALUES ('{$peopleId}')";
 		$result = mysql_query($sql,$dbConn);
 		$roleId = mysql_insert_id($dbConn);
-		if(mysql_errno() > 0 || $patientId == ''){
+		if(mysql_errno() > 0 || $roleId == ''){
 			if(USE_FIREPHP){$this->firephp->log($this,'--SQL error, inserting into "patients" table at '.__LINE__);}
 			$this->Session->setFlashMessage('There was an error with our system, we are working on fixing it. Please try again..');
 			redirect(ROOT_URL.SIGN_IN_URL);
 		}
-		
+
 		// log the user in
 		$user = $this->checkIsUser();
 		$this->initializeUser($user);
+		
 		redirect(ROOT_URL.'/site/user_agreement');
 
 	}
@@ -216,7 +215,14 @@ class authentication{
  * different field names. Need to come up with a way of making the field names a configuration value. One possibility 
  * would be to have the next few lines of code be a helper function that's configured from the index file.
  */
-
+		if(!isset($post['email_address'])){
+			if(isset($post['email'])){
+				$post['email_address'] = $post['email'];
+				unset($post['email']); 
+			}else{
+				$post['email_address'] = '';
+			}
+		}
 		if($post['email_address'] == '' || $post['password'] == '')
 			return FALSE;
 		$sql = 'SELECT * FROM people WHERE email=\''.$post['email_address'].'\' AND password=\''.$post['password'].'\' LIMIT 1';
