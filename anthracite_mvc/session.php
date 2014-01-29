@@ -26,14 +26,27 @@ class session{
 		else
 			$this->isLoggedIn = TRUE;
 	}
-	
+
 	public function getLoggedInStatus(){
 		// this needs to be expanded to check whether session has expired or not
+		
+		// THESE LINES ONLY WORK IN 5.4
 		// PHP_SESSION_NONE if sessions are enabled, but none exists.
 		// PHP_SESSION_ACTIVE if sessions are enabled, and one exists.
-		if($this->isLoggedIn == TRUE && session_status() == PHP_SESSION_NONE){
-			$this->isLoggedIn = FALSE;
-			return FALSE;
+		//if($this->isLoggedIn == TRUE && session_status() == PHP_SESSION_NONE){
+			
+		if($this->isLoggedIn == TRUE){
+			$setting = 'session.use_trans_sid';
+		    $current = ini_get($setting);
+		    if (FALSE === $current)
+		    {
+		        throw new UnexpectedValueException(sprintf('Setting %s does not exists.', $setting));
+		    }
+		    $result = @ini_set($setting, $current); 
+		    $return = $result !== $current;
+			
+			$this->isLoggedIn = $return;
+			return $return;
 		}
 		if($this->isLoggedIn == FALSE)
 			return FALSE;
