@@ -36,7 +36,7 @@ class session{
 		//if($this->isLoggedIn == TRUE && session_status() == PHP_SESSION_NONE){
 			
 		if($this->isLoggedIn == TRUE){
-			$setting = 'session.use_trans_sid';
+			/*$setting = 'session.use_trans_sid';
 		    $current = ini_get($setting);
 		    if (FALSE === $current)
 		    {
@@ -46,9 +46,9 @@ class session{
 		    $return = $result !== $current;
 			
 			$this->isLoggedIn = $return;
-			return $return;
-		}
-		if($this->isLoggedIn == FALSE)
+			return $return;*/
+			return TRUE;
+		}elseif($this->isLoggedIn == FALSE)
 			return FALSE;
 		else
 			return TRUE;

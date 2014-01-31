@@ -486,6 +486,7 @@ function resize_and_move_image($filename='',$filepath='',$targetheight=60,$targe
 	$ratio = $height / $width;
 	// $newwidth = $width * $ratio;
 	// $newheight = $ratio * $targetheight;
+// TO DO: make this work on multiple sizes
 	$newwidth = $targetwidth;
 	$newheight = $targetheight;
 	
