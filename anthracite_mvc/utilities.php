@@ -410,12 +410,12 @@ function send_email($text,$to=array(),$from=array(),$subject='',$htmlText){
 	 */
 
 	// For when we have SMTP available 
-	$transport = Swift_SmtpTransport::newInstance('mail.gokurbi.com', 587) // port:25 or 587
+	/*$transport = Swift_SmtpTransport::newInstance('mail.gokurbi.com', 587) // port:25 or 587
 	->setUsername('invitation@gokurbi.com')
 	->setPassword('qBpPRxys')
-	;
-	/* // If SMTP doesn't work
-	 $transport = Swift_MailTransport::newInstance(); */
+	;*/
+	// If SMTP doesn't work
+	$transport = Swift_MailTransport::newInstance();
 	
 	// Create the Mailer using your created Transport
 	$mailer = Swift_Mailer::newInstance($transport);

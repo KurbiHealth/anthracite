@@ -76,18 +76,10 @@ class authentication{
 			if($user){
 				if(USE_FIREPHP){$this->firephp->log($user,'Authentication.php, retrieved $user, signing in at line '.__LINE__);}
 				$this->initializeUser($user);
-
-				if(USE_FIREPHP){$this->firephp->log('--redirecting to HOME_URL on line '.__LINE__);}
-
-				ob_end_flush();
-				redirect(ROOT_URL.LOGGED_IN_HOME_URL);
+				return TRUE;
 			}else{
 				$this->Session->set('queryString',$queryString);
-				if(USE_FIREPHP){$this->firephp->log('--User credentials not found in db, redirecting to sign_in page');}
-				$this->Session->setFlashMessage('You must sign in to see that page');
-
-				ob_end_flush();
-				redirect(ROOT_URL.SIGN_IN_URL);
+				return FALSE;
 			}
 			
 		}else{

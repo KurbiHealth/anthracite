@@ -125,10 +125,14 @@ class frontController extends coreController{
 // page requested is the sign-in POST action, so take the appropriate steps
 			if($Authentication->userIsSigningIn()){
 				$result = $Authentication->signInUser();
+				if($result){
+					if(USE_FIREPHP){$firephp->log('--redirecting to HOME_URL on line '.__LINE__);}
+					redirect(ROOT_URL.LOGGED_IN_HOME_URL);
+				}
 				if(!$result){
-					$signUpUrl = ROOT_URL.SIGN_UP_URL;
-					ob_end_flush();
-					redirect($signUpUrl);
+					if(USE_FIREPHP){$firephp->log('--User credentials not found in db, redirecting to sign_up page');}
+					$this->Session->setFlashMessage('Your credentials were not found in our database, you must sign up.');
+					redirect(ROOT_URL.SIGN_UP_URL);
 				}
 			}
 		
