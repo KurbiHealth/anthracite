@@ -385,7 +385,7 @@ function redirect($url){
 }
 
 function send_email($text,$to=array(),$from=array(),$subject='',$htmlText){
-	
+	global $firephp;
 	require_once PATH_TO_MVC_LIBRARIES.'/swiftMailer/Swift-4.3.1/lib/swift_required.php';
 	
 	/**
@@ -422,6 +422,7 @@ function send_email($text,$to=array(),$from=array(),$subject='',$htmlText){
 	
 	// Send the message
 	$result = $mailer->send($message);
+	$firephp->log($result,'$result from sending email in utilities.php, line '.__LINE__);
 
 	return $result;
 }

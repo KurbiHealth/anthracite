@@ -240,7 +240,7 @@ class authentication{
 				$userInfo[$key] = $value;
 			}
 		}else{
-			if(USE_FIREPHP){$this->firephp->log('WARNING! in Authentication.php unable to get role fields at line '.__LINE__);}
+			if(USE_FIREPHP){$this->firephp->log($result,'WARNING! in Authentication.php unable to get role fields at line '.__LINE__);}
 			die('Cound not get your information from the database in Authentication at line '.__LINE__);
 		}
 
