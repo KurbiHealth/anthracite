@@ -131,7 +131,7 @@ class frontController extends coreController{
 				}
 				if(!$result){
 					if(USE_FIREPHP){$firephp->log('--User credentials not found in db, redirecting to sign_up page');}
-					$this->Session->setFlashMessage('Your credentials were not found in our database, you must sign up.');
+//?????????   $this->Session->setFlashMessage('Your credentials were not found in our database, you must sign up.');
 					redirect(ROOT_URL.SIGN_UP_URL);
 				}
 			}
