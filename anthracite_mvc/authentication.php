@@ -241,7 +241,8 @@ class authentication{
 			}
 		}else{
 			if(USE_FIREPHP){$this->firephp->log($result,'WARNING! in Authentication.php unable to get role fields at line '.__LINE__);}
-			die('Cound not get your information from the database in Authentication at line '.__LINE__);
+			//die('Cound not get your information from the database in Authentication at line '.__LINE__);
+			redirect(ROOT_URL.SIGN_UP_URL);
 		}
 
 		$reg->set('userRecord',$userInfo);
