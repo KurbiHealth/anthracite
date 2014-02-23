@@ -456,6 +456,7 @@ function convertToMysqlDate($date){
  * resize an image
  */
 function resize_and_move_image($filename='',$filepath='',$targetheight=60,$targetwidth=53,$targetPath='',$targetName=''){
+	global $firephp;
 	if($targetName == ''){$targetName = $filename;}
 	
 	/**
@@ -466,6 +467,8 @@ function resize_and_move_image($filename='',$filepath='',$targetheight=60,$targe
     $l = strlen($filename) - $i;
     $extension = substr($filename,$i+1,$l);
 	$extension = strtolower($extension);
+	
+	$firephp->log($extension,'$extension, in utilities.php, at line '.__LINE__);
 	
 	/**
 	 * Create $src from uploaded file (temp folder) dependent on image type (jpg,png,gif)
@@ -479,6 +482,10 @@ function resize_and_move_image($filename='',$filepath='',$targetheight=60,$targe
 	}else{
 		$src = imagecreatefromgif($uploadedfile);
 	}
+ 
+ 	if($src == FALSE){
+ 		return FALSE;
+ 	}
  
  	/**
 	 * Manipulate Width and Height
