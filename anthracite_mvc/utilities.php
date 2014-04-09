@@ -328,6 +328,7 @@ function treatmentScheduled($patientId,$onDate,$treatmentId,$treatmentType){
 	$temp = '';	
 	
 	if(!isset($row['frequency'])){$row['frequency'] = '';}
+	if(!isset($row[$lastDateField])){$row[$lastDateField] = '';}
 // FIX LINE ABOVE!!! FIX LINE ABOVE!!!
 	$dateLastTaken = strtotime($row[$lastDateField].' 00:00:00');
 	if($row['frequency'] == '1'){ // if 'frequency' == 1 == 'Once A Day', then automatically add to reminder list
