@@ -144,7 +144,7 @@ class frontController extends coreController{
 // page requested can't be sent to user, so redirect them to default public page (sign, sign up, home pg)
 			elseif( !$Authentication->pageCanBeSentToUser() ){
 				$Session->setFlashMessage('You must sign in to see that page');
-				ob_end_flush();
+				//ob_end_flush();
 				redirect(ROOT_URL.SIGN_IN_URL);
 			}
 
