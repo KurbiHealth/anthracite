@@ -33,10 +33,13 @@ class errorManagement{
 				if(ob_get_contents() != ''){
 					ob_clean();
 				}
-				$body = '<h1>ERROR</h1>
-				<h3>404 Error</h3>
+				$body = '<div id="error-wrapper">
+				<h1>ERROR</h1>
+				<hr/>
 				<p>Unfortunately we had an issue with this page, but our programmers have been alerted and are working on it. 
-				Please hit the back button on your browser to go the page you were on previously.</p>';
+				Please hit the back button on your browser to go the page you were on previously.</p>
+				</div>';
+				$body .= implode('//', $lastErr);
 				include(MVC_APP_PATH.'app/views/master_template.php');
 			}
 		}

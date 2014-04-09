@@ -57,7 +57,7 @@ $conn = mysql_connect($DB[ENVIRONMENT]['db_host'],$DB[ENVIRONMENT]['db_user'],$D
 if(!$conn){die('Unable to connect to the database: '.mysql_error().', in bootstrap, line '.__LINE__.'.');}
 
 $db_selected = mysql_select_db($DB[ENVIRONMENT]['db_name'],$conn);
-if(!$db_selected){die('Unable to use the database: '.$this->dbname.' : '.mysql_error().' in bootstrap.');}
+if(!$db_selected){die('Unable to use the database: '.$DB[ENVIRONMENT]['db_name'].' : '.mysql_error().' in bootstrap.');}
 
 if(!$reg->set('databaseConnectionSingleton',$conn)){die('Unable to save the database connection to registry in boostrap.');}
 

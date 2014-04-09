@@ -211,7 +211,7 @@ class frontController extends coreController{
 			$Error->appDie('Was unable to setup the core AnthraciteMVC files.');
 		  }
 		  
-		  $firephp->log('-----------------------end FRONTCONTROLLER');
+		  if(USE_FIREPHP){$firephp->log('-----------------------end FRONTCONTROLLER');}
 		  
 		  /**
 		   * Kick off the next phase in the life of a page request coming through the loving hands of the Anthracite framework
