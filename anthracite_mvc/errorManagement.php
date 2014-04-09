@@ -6,11 +6,13 @@ class errorManagement{
 	
 	public function __construct(){
 
-		/*if(DEBUG || DEV_DEBUG){
+		if(ENVIRONMENT == 'dev'){
 			error_reporting(E_ALL);
 			ini_set('display_errors','on');
-		}*/
-		error_reporting(E_ALL);
+		}
+		if(ENVIRONMENT == 'prod'){
+			error_reporting(E_ERROR);
+		}
 
 		//fastcgi_finish_request();
 		register_shutdown_function(array($this, 'shutdown_handler'));
