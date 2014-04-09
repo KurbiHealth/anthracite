@@ -39,8 +39,9 @@ class errorManagement{
 				<p>Unfortunately we had an issue with this page, but our programmers have been alerted and are working on it. 
 				Please hit the back button on your browser to go the page you were on previously.</p>
 				</div>';
-				$body .= implode('//', $lastErr);
-				include(MVC_APP_PATH.'app/views/master_template.php');
+				//$body .= implode('//', $lastErr);
+				if(defined(AJAX_REQUEST) && AJAX_REQUEST == FALSE)
+					include(MVC_APP_PATH.'app/views/master_template.php');
 			}
 		}
 	}
