@@ -373,6 +373,9 @@ function treatmentScheduled($patientId,$onDate,$treatmentId,$treatmentType){
  */
 
 function redirect($url){
+	// @TODO need logic here to decide whether to flush the buffer or just clean it in the next line of code
+	// ob_end_flush();
+
 	// erase the output buffer, since the current page is going away, so we don't need any output
 	ob_get_clean();
 		
