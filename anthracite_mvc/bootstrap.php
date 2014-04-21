@@ -1,6 +1,8 @@
 <?php
 
 if(USE_FIREPHP){$firephp->log('CURR - bootstrap.php');}
+if(USE_FIREPHP){$firephp->log($_FILES ,'$_FILES in bootstrap, line '.__LINE__);}
+
 
 /**
  * APP GROUP CONFIGURATIONS
