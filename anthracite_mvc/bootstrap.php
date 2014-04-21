@@ -2,7 +2,7 @@
 
 if(USE_FIREPHP){$firephp->log('CURR - bootstrap.php');}
 if(USE_FIREPHP){$firephp->log($_FILES ,'$_FILES in bootstrap, line '.__LINE__);}
-if(USE_FIREPHP){$firephp->log($_SERVER['CONTENT_LENGTH'] ,'$_SERVER['CONTENT_LENGTH'] in bootstrap, line '.__LINE__);}
+if(USE_FIREPHP){$firephp->log($_SERVER['CONTENT_LENGTH'] ,'$_SERVER[CONTENT_LENGTH] in bootstrap, line '.__LINE__);}
 
 
 /**
