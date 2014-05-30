@@ -55,12 +55,17 @@ class session{
 	}	
 	
 	public function setFlashMessage($message){
+		// $message should be an array
 		$_SESSION['flashMessage'] = $message;
 	}
 	
 	public function getFlashMessage(){
-		if(isset($_SESSION['flashMessage']) && $_SESSION['flashMessage'] != '')
-			return $_SESSION['flashMessage'];
+		if(isset($_SESSION['flashMessage']) && $_SESSION['flashMessage'] != ''){
+			$msg = $_SESSION['flashMessage'];
+			// clear out the flashmessage, only should be 1 in session at any point in time
+			$_SESSION['flashMessage'] = '';
+			return $msg;
+		}
 	}
 
 //		GET & SET VALUES		//

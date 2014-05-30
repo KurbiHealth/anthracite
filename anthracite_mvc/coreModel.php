@@ -54,6 +54,9 @@
 		//$this->firephp = $reg->get('firephp');
 		global $firephp;
 		$this->firephp = $firephp;
+
+		// set hash for url encrypt/decrypt here
+		$this->urlkey = md5('d,k72@sKp1Q94', true); // For demonstration purpose
 	}
 	
 	public function __destruct(){
@@ -427,10 +430,12 @@
  * ENCRYPTION
  */
 
-	var $skey = ""; // you can change it
+	var $skey = "k20#di4kewx*02PD233!@F^"; // you can change it
 	
-	public function encode($value){ 
-        if(!$value){return false;}
+	public function encrypt($value){ 
+        if(!$value){
+        	return false;
+		}
         $text = $value;
         $iv_size = mcrypt_get_iv_size(MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB);
         $iv = mcrypt_create_iv($iv_size, MCRYPT_RAND);
@@ -438,7 +443,7 @@
         return trim($crypttext); 
     }
 
-    public function decode($value){
+    public function decrypt($value){
         if(!$value){return false;}
         $crypttext = $value; 
         $iv_size = mcrypt_get_iv_size(MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB);
@@ -446,5 +451,23 @@
         $decrypttext = mcrypt_decrypt(MCRYPT_RIJNDAEL_256, $this->skey, $crypttext, MCRYPT_MODE_ECB, $iv);
         return trim($decrypttext);
     }
+
+	var $urlkey = ''; // the hash value of this variable is set in __construct()
+
+	function encryptUrlKey($id){
+	    $id = base_convert($id, 10, 36); // Save some space
+	    $data = mcrypt_encrypt(MCRYPT_BLOWFISH, $this->urlkey, $id, 'ecb');
+	    $data = bin2hex($data);
+
+	    return $data;
+	}
+
+	function decryptUrlKey($encrypted_id){
+	    $data = pack('H*', $encrypted_id); // Translate back to binary
+	    $data = mcrypt_decrypt(MCRYPT_BLOWFISH, $this->urlkey, $data, 'ecb');
+	    $data = base_convert($data, 36, 10);
+
+	    return $data;
+	}
 	
 }

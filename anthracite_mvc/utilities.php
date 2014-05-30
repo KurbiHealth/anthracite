@@ -538,4 +538,13 @@ function sendMessage($personId,$textonlyMessage,$formattedMessage){
 	
 	
 }
-?>
+
+function setFlashMessage($type='',$title='',$payload=''){
+	$reg = registry::singleton();
+	$session = $reg->get('sessionSingleton');
+	$session->setFlashMessage(array(
+		'type' => $type,
+		'title' => $title,
+		'text' => $payload
+	));
+}

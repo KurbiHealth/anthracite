@@ -8,13 +8,19 @@ class frontController extends coreController{
 	 	
 	 }
 	 
+	/**
+	 * @todo Need to save IP that user is signing in with to Session var, and then compare that IP 
+	 * to current IP for life of session, do it via frontController (?), and redirect to sign-in page
+	 * if the IP ever changes mid-session
+	 */
+
 	 /**
 	  * @param  
 	  */
 	 function start(){
 	 	if(!defined('USE_FIREPHP'))
 			define('USE_FIREPHP',FALSE);
-		
+
 		if(USE_FIREPHP){
 			global $firephp;
 			$firephp->log('-----------------------STARTING FRONTCONTROLLER');
@@ -48,17 +54,36 @@ class frontController extends coreController{
 		$queryString = $Request->getOriginalQuery();
 		$page = $Request->getPageVar();
 		$action = $Request->getActionVar();
-		
-		if($page == '' || $action == '')
-			die("Unable to get page_group and page values from url in Front Controller on line __LINE__.");
+
+		if($page == '') // if we do with default index, then this changes to if($page == '')
+			die("Unable to get page_group from url in Front Controller on line ".__LINE__);
 		else{
 			if(USE_FIREPHP){$firephp->log(  array('page'=>$page,'action'=>$action),'$page and $action');}
 		}
-		
+
+		if(USE_FIREPHP){$firephp->log('loading mvc MODEL class, line '.__LINE__);}
+		$Model = $Loader->loadAppModel($page);
+
+		if(!$Model)
+			die("Couldn't find that page and action (".$page.",".$action.") in the model directory in Front Controller on line ".__LINE__);
+
+		/**
+		 * If page has a value but no action, and there exists an index function in the model, then go ahead and go to it ???
+		 */
+		if($page != '' && $action == '' && method_exists($Model,'index')){
+		 	$action = 'index';
+		}
+
+		/**
+		 * Get parameters from url, put into $data array
+		 */
 		$data = $Request->getParams();
 
+		/**
+		 * Save page requested in case a redirect is needed
+		 */
 		$Session->set('currPageRequested',$page);
-		
+	
 		/**
 		 * Ajax calls.
 		 * It checks to see whether the $action segment starts with 'ajax_'. If it does, it turns off error
@@ -71,7 +96,7 @@ class frontController extends coreController{
 			define('AJAX_REQUEST',TRUE);
 		else
 			define('AJAX_REQUEST',FALSE);
-		
+
 		/**
 		 * No Template calls
 		 */
@@ -94,7 +119,7 @@ class frontController extends coreController{
 		
 		// last authenticated page saved in Session, so that ajax calls from that page can come through without needing authentication
 		$Session->set('currAuthenticatedPage',$page);
-
+	
 /**
  * Login functionality
  * There is an array, set in index.php, which lists which $page segments are protected, i.e. a user has to be logged in to see. 
@@ -105,7 +130,7 @@ class frontController extends coreController{
  * redirected because their session wasn't valid. If there is an "originalQuery", send the user to that page, 
  * otherwise send them to the home page.
  */
- 
+
  // Check to see if app has it's own authentication class that overrides core authentication class
  		if(is_file(MVC_APP_PATH.'mvc_overrides/authentication.php')){ // use 'library' instead of 'mvc_overrides'?
  			include MVC_APP_PATH.'mvc_overrides/authentication.php';
@@ -122,28 +147,10 @@ class frontController extends coreController{
 			$Authentication->setInitialVariables($queryString,$page,$action);
 			if(USE_FIREPHP){$firephp->log(array('ReferringQueryURL'=>$Request->getReferringQuery(), 'SIGN_IN_URL'=>SIGN_IN_URL, 'SIGN_UP_URL'=>SIGN_UP_URL, '$queryString'=>$queryString),'--Variables at line '.__LINE__);}
 
-// page requested is the sign-in POST action, so take the appropriate steps
-			if($Authentication->userIsSigningIn()){
-				$result = $Authentication->signInUser();
-				if($result){
-					if(USE_FIREPHP){$firephp->log('--redirecting to HOME_URL on line '.__LINE__);}
-					redirect(ROOT_URL.LOGGED_IN_HOME_URL);
-				}
-				if(!$result){
-					if(USE_FIREPHP){$firephp->log('--User credentials not found in db, redirecting to sign_up page');}
-//?????????   $this->Session->setFlashMessage('Your credentials were not found in our database, you must sign up.');
-					redirect(ROOT_URL.SIGN_UP_URL);
-				}
-			}
-		
-// page requested is the sign-up POST action, so take the appropriate steps
-			elseif($Authentication->userIsSigningUp()){
-				$Authentication->signUpUser();
-			}
 
 // page requested can't be sent to user, so redirect them to default public page (sign, sign up, home pg)
-			elseif( !$Authentication->pageCanBeSentToUser() ){
-				$Session->setFlashMessage('You must sign in to see that page');
+			if( !$Authentication->pageCanBeSentToUser() ){
+				setFlashMessage('text','Notice!','You must sign in to see that page');
 				redirect(ROOT_URL.SIGN_IN_URL);
 			}
 
@@ -172,13 +179,9 @@ class frontController extends coreController{
 		 */
 		if(USE_FIREPHP){$firephp->log('loading mvc VIEW class, line '.__LINE__);}
 		$VIEW = $Loader->loadAppView('appView');
+		
+		// The Model was created above, in order to check whether empty $action was ok or should cause a fatal error
 
-		if(USE_FIREPHP){$firephp->log('loading mvc MODEL class, line '.__LINE__);}
-		$Model = $Loader->loadAppModel($page);
-
-		if(!$Model)
-			die("Couldn't find that page and action (".$page.",".$action.") in the model directory in Front Controller on line 98.");
-		  
 		/**
 		 * Load the Controller
 		 * If there is a specific controller ($path=controller name file & $action = method name, a-la model convention),

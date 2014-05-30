@@ -174,6 +174,10 @@ class request{
 	public function getGet(){
 		return $this->getGlobals;
 	}
+
+	public function getRequest(){
+		return $this->requestGlobals;
+	}
 	
 	public function getServer(){
 		return $this->server;
