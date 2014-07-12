@@ -56,7 +56,14 @@ if(!$reg->set('db_conf',$DB)){die('Unable to save database configuration informa
 
 $connString = $DB[ENVIRONMENT]['db_host'].':'.$DB[ENVIRONMENT]['db_port'].','.$DB[ENVIRONMENT]['db_user'].','.$DB[ENVIRONMENT]['db_pass'];
 
-$conn = mysql_connect($DB[ENVIRONMENT]['db_host'],$DB[ENVIRONMENT]['db_user'],$DB[ENVIRONMENT]['db_pass']);
+// WHEN SCRIPT DIES IN THE NEXT LINE, NO FEEDBACK TO USER
+try{
+	$conn = mysql_connect($DB[ENVIRONMENT]['db_host'],$DB[ENVIRONMENT]['db_user'],$DB[ENVIRONMENT]['db_pass']);
+} catch (Exception $e) {
+    echo 'Caught exception: ',  $e->getMessage(), "\n";
+}
+// ======================================================
+
 if(!$conn){die('Unable to connect to the database: '.mysql_error().', in bootstrap, line '.__LINE__.'.');}
 
 $db_selected = mysql_select_db($DB[ENVIRONMENT]['db_name'],$conn);
