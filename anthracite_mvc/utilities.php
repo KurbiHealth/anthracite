@@ -55,7 +55,7 @@ function currentCareTeam(){
 	
 	// 1. get all care team members
 	// 1a. get the user's record
-	$sql = 'SELECT * FROM care_team WHERE role_id='.$userId;
+	$sql = 'SELECT * FROM care_team WHERE role_id='.$userId.' AND role=\''.USER_ROLE.'\'';
 	$result = mysql_query($sql,$dbConn);
 	if(is_resource($result)){
 		$numRows = mysql_num_rows($result);
@@ -75,7 +75,9 @@ function currentCareTeam(){
 			while($row = mysql_fetch_assoc($result)){
 				$return[] = $row;
 			}
+//echo '<pre>';var_dump($return);echo '</pre>';exit;
 			foreach($return as $key => $teamMember){
+//echo '<pre>';var_dump($teamMember);echo '</pre>';
 				$sql  = 'SELECT * FROM '.$teamMember['role'].' JOIN people ON (people.id=';
 				$sql .= $teamMember['role'].'.person_id) WHERE '.$teamMember['role'].'.id='.$teamMember['role_id'];
 				$result2 = mysql_query($sql,$dbConn);
@@ -83,7 +85,7 @@ function currentCareTeam(){
 				if($numRows2 > 0){
 					$temp = mysql_fetch_assoc($result2);
 				}
-				
+
 /* ---------- ADD DECRYPTION HERE ---------- */
 				
 				// expand the $careTeam array to include information from "people" table
@@ -391,7 +393,7 @@ function redirect($url){
 function send_email($text,$to=array(),$from=array(),$subject='',$htmlText){
 	global $firephp;
 	require_once PATH_TO_MVC_LIBRARIES.'/swiftMailer/Swift-4.3.1/lib/swift_required.php';
-	
+return $from;	
 	/**
 	 * Create the message
 	 * @tutorial http://swiftmailer.org/docs/messages.html
