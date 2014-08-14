@@ -56,11 +56,11 @@ function currentCareTeam(){
 	// 1. get all care team members
 	// 1a. get the user's record
 	$sql = 'SELECT * FROM care_team WHERE role_id='.$userId.' AND role=\''.USER_ROLE.'\'';
-	$result = mysql_query($sql,$dbConn);
+	$result = mysqli_query($dbConn,$sql);
 	if(is_resource($result)){
-		$numRows = mysql_num_rows($result);
+		$numRows = mysqli_num_rows($result);
 		if($numRows > 0){
-			$userRecord = mysql_fetch_assoc($result);
+			$userRecord = mysqli_fetch_assoc($result);
 		}
 	}
 	
@@ -68,11 +68,11 @@ function currentCareTeam(){
 	$sql = 'SELECT * FROM care_team WHERE patient_id='.$userRecord['patient_id'].' AND accepted=1';
 	if(USE_FIREPHP){$firephp->log(array($dbConn,$sql),'--$dbConn and $sql at line '.__LINE__);}
 	
-	$result = mysql_query($sql,$dbConn);
+	$result = mysqli_query($dbConn,$sql);
 	if(is_resource($result)){
-		$numRows = mysql_num_rows($result);
+		$numRows = mysqli_num_rows($result);
 		if($numRows > 0){
-			while($row = mysql_fetch_assoc($result)){
+			while($row = mysqli_fetch_assoc($result)){
 				$return[] = $row;
 			}
 //echo '<pre>';var_dump($return);echo '</pre>';exit;
@@ -80,10 +80,10 @@ function currentCareTeam(){
 //echo '<pre>';var_dump($teamMember);echo '</pre>';
 				$sql  = 'SELECT * FROM '.$teamMember['role'].' JOIN people ON (people.id=';
 				$sql .= $teamMember['role'].'.person_id) WHERE '.$teamMember['role'].'.id='.$teamMember['role_id'];
-				$result2 = mysql_query($sql,$dbConn);
-				$numRows2 = mysql_num_rows($result2);
+				$result2 = mysqli_query($dbConn,$sql);
+				$numRows2 = mysqli_num_rows($result2);
 				if($numRows2 > 0){
-					$temp = mysql_fetch_assoc($result2);
+					$temp = mysqli_fetch_assoc($result2);
 				}
 
 /* ---------- ADD DECRYPTION HERE ---------- */
@@ -97,16 +97,16 @@ function currentCareTeam(){
 			$return = FALSE;
 		}
 	}else{
-		if(USE_FIREPHP){$firephp->log('--Mysql call did not work, at line '.__LINE__);}
+		if(USE_FIREPHP){$firephp->log('--mysqli call did not work, at line '.__LINE__);}
 		$return = FALSE;
 	}
 	
 	// 2. add the patient if it's not the current user
 	if($userRecord['patient_id'] != $userId){
 		$sql = 'SELECT * FROM patients JOIN people ON (patients.person_id=people.id) WHERE patients.id='.$userRecord['patient_id'];
-		$result = mysql_query($sql,$dbConn);
+		$result = mysqli_query($dbConn,$sql);
 		if($numRows2 > 0){
-			$temp = mysql_fetch_assoc($result);
+			$temp = mysqli_fetch_assoc($result);
 		}
 		
 /* ---------- ADD DECRYPTION HERE ---------- */
@@ -158,11 +158,11 @@ echo $role.'<br/>';exit;
 	// 1. get all care team members
 	// 1a. get the user's record
 	$sql = 'SELECT * FROM care_team WHERE role_id='.$userId.' AND accepted=1';
-	$result = mysql_query($sql,$dbConn);
+	$result = mysqli_query($dbConn,$sql);
 	if(is_resource($result)){
-		$numRows = mysql_num_rows($result);
+		$numRows = mysqli_num_rows($result);
 		if($numRows > 0){
-			while($row = mysql_fetch_assoc($result)){
+			while($row = mysqli_fetch_assoc($result)){
 				$userRecords[] = $row;
 			}
 		}
@@ -176,24 +176,24 @@ echo '<pre>';print_r($userRecords);echo '</pre>';
 		$sql = 'SELECT * FROM care_team WHERE patient_id='.$userRecord['patient_id'].' AND accepted=1';
 		if(USE_FIREPHP){$firephp->log(array($dbConn,$sql),'--$dbConn and $sql at line '.__LINE__);}
 		
-		$result = mysql_query($sql,$dbConn);
+		$result = mysqli_query($dbConn,$sql);
 		if(is_resource($result)){
-			$numRows = mysql_num_rows($result);
+			$numRows = mysqli_num_rows($result);
 			if($numRows > 0){
-				while($row = mysql_fetch_assoc($result)){
+				while($row = mysqli_fetch_assoc($result)){
 					$tempReturn[] = $row;
 				}
 echo '<pre>';print_r($tempReturn);echo '</pre>';
 				foreach($tempReturn as $key => $teamMember){
 					$sql  = 'SELECT * FROM '.$teamMember['role'].' JOIN people ON (people.id=';
 					$sql .= $teamMember['role'].'.person_id) WHERE '.$teamMember['role'].'.id='.$teamMember['role_id'];
-					$result2 = mysql_query($sql,$dbConn);
-					$numRows2 = mysql_num_rows($result2);
+					$result2 = mysqli_query($dbConn,$sql);
+					$numRows2 = mysqli_num_rows($result2);
 					
 /* ---------- ADD DECRYPTION HERE ---------- */
 					
 					if($numRows2 > 0){
-						$temp = mysql_fetch_assoc($result2);
+						$temp = mysqli_fetch_assoc($result2);
 					}
 					// expand the $careTeam array to include information from "people" table
 					foreach($temp as $key2=>$tempValue)
@@ -204,7 +204,7 @@ echo '<pre>';print_r($tempReturn);echo '</pre>';
 				$return = FALSE;
 			}
 		}else{
-			if(USE_FIREPHP){$firephp->log('--Mysql call did not work, at line '.__LINE__);}
+			if(USE_FIREPHP){$firephp->log('--mysqli call did not work, at line '.__LINE__);}
 			$return = FALSE;
 		}
 		
@@ -225,11 +225,11 @@ function getAllPatientsForDoctor(){
 	// 1. get all care team members
 	// 1a. get the user's record
 	$sql = 'SELECT * FROM care_team WHERE role_id='.$userId.' AND accepted=1';
-	$result = mysql_query($sql,$dbConn);
+	$result = mysqli_query($dbConn,$sql);
 	if(is_resource($result)){
-		$numRows = mysql_num_rows($result);
+		$numRows = mysqli_num_rows($result);
 		if($numRows > 0){
-			while($row = mysql_fetch_assoc($result)){
+			while($row = mysqli_fetch_assoc($result)){
 				$userRecords[] = $row;
 			}
 		}else{
@@ -246,11 +246,11 @@ function getAllPatientsForDoctor(){
 		$sql = 'SELECT * FROM patients JOIN people ON (patients.person_id=people.id) WHERE patients.id='.$userRecord['patient_id'];
 		if(USE_FIREPHP){$firephp->log(array($dbConn,$sql),'--$dbConn and $sql at line '.__LINE__);}
 		
-		$result = mysql_query($sql,$dbConn);
+		$result = mysqli_query($dbConn,$sql);
 		if(is_resource($result)){
-			$numRows = mysql_num_rows($result);
+			$numRows = mysqli_num_rows($result);
 			if($numRows > 0){
-				$return[] = mysql_fetch_assoc($result);
+				$return[] = mysqli_fetch_assoc($result);
 			}
 		}
 		
@@ -265,19 +265,19 @@ function _getFromDatabase($sql){
 	global $firephp;
 	if(USE_FIREPHP){$firephp->log('CURR utilities.php, _getFromDatabase(), line '.__LINE__);}
 	
-	$dbConn = getDbConnection();
+	$dbConn  = getDbConnection();
 	
 	if(USE_FIREPHP){$firephp->log(array($dbConn,$sql),'--$dbConn and $sql at line '.__LINE__);}
-	
-	$result = mysql_query($sql,$dbConn);
+
+	$result = mysqli_query($dbConn,$sql);
 	
 	if(is_resource($result)){
-		$numRows = mysql_num_rows($result);
+		$numRows = mysqli_num_rows($result);
 		if($numRows == 1){
-			$return = mysql_fetch_assoc($result);
+			$return = mysqli_fetch_assoc($result);
 			if(USE_FIREPHP){$firephp->log($return,'$return at line '.__LINE__);}
 		}elseif($numRows > 1){
-			while($row = mysql_fetch_assoc($result)){
+			while($row = mysqli_fetch_assoc($result)){
 				$return[] = $row;
 			}
 			if(USE_FIREPHP){$firephp->log($return,'$return at line '.__LINE__);}
@@ -286,7 +286,7 @@ function _getFromDatabase($sql){
 			if(USE_FIREPHP){$firephp->log($return,'$return at line '.__LINE__);}
 		}
 	}else{
-		if(USE_FIREPHP){$firephp->log('--Mysql call did not work, at line '.__LINE__);}
+		if(USE_FIREPHP){$firephp->log('--mysqli call did not work, at line '.__LINE__);}
 		$return = FALSE;
 	}
 	if(USE_FIREPHP){$firephp->log($return,'--$return at line '.__LINE__);}
@@ -434,7 +434,7 @@ return $from;
 	return $result;
 }
 
-function cleanMysqlDate($date){
+function cleanmysqliDate($date){
 	$tempDate = explode('-',$date);
 	if(isset($tempDate[1]) && isset($tempDate[2]) && isset($tempDate[0]))
 		$cleanDate = $tempDate[1].'/'.$tempDate[2].'/'.$tempDate[0];
@@ -446,8 +446,8 @@ function cleanMysqlDate($date){
 /**
  * format should come in as 05/29/1973, and should get converted to 1973-05-29
  */
-function convertToMysqlDate($date){
-	// check to make sure it's not already in mysql format, i.e. has "-" instead of "/"
+function convertTomysqliDate($date){
+	// check to make sure it's not already in mysqli format, i.e. has "-" instead of "/"
 	if(substr_count($date,'/') > 0){
 		$tempDate = explode('/',$date);
 		$cleanDate = $tempDate[2].'-'.$tempDate[0].'-'.$tempDate[1];

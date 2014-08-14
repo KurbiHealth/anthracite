@@ -40,23 +40,18 @@
 		if($conn != NULL){
 			$this->dbLink = $conn;
 		}else{
-			$this->dbLink = mysql_connect("$this->dbhost:$this->dbport",$this->dbuser,$this->dbpass);
+			$this->dbLink = mysqli_connect("$this->dbhost:$this->dbport",$this->dbuser,$this->dbpass,$this->dbname);
 			if(!$this->dbLink){
 				die('Unable to connect to the database: '.mysql_error());
 			}
-		}
-		
-		$db_selected = mysql_select_db($this->dbname,$this->dbLink);
-		if(!$db_selected){
-			die('Unable to use the database: '.$this->dbname.' : '.mysql_error());
 		}
 		
 		//$this->firephp = $reg->get('firephp');
 		global $firephp;
 		$this->firephp = $firephp;
 
-		// set hash for url encrypt/decrypt here
-		$this->urlkey = md5('d,k72@sKp1Q94', true); // For demonstration purpose
+// set hash for url encrypt/decrypt here
+$this->urlkey = md5('d,k72@sKp1Q94', true); // For demonstration purpose
 	}
 	
 	public function __destruct(){
@@ -94,19 +89,19 @@
 		$this->sql = $sql;
 		
 		// DO QUERY
-		$result = mysql_query($sql);
+		$result = mysqli_query($sql);
 
-		if(mysql_errno() != 0){
+		if(mysqli_errno() != 0){
 			// I'm trying to decouple the parts of this function, and also make the code easier to read
 			$this->setError(array(
-				'error'=>mysql_error(),
+				'error'=>mysqli_error(),
 				'sql'=>$sql
 			));
 			$this->setErrorFlag(TRUE);
-			if(USE_FIREPHP){$firephp->log( array('error'=>mysql_error(),'sql'=>$sql),'CURR coreModel.php,SQL ERROR');}
+			if(USE_FIREPHP){$firephp->log( array('error'=>mysqli_error(),'sql'=>$sql),'CURR coreModel.php,SQL ERROR');}
 			return FALSE;
 		}else{
-			$this->sqlInsertId = mysql_insert_id();
+			$this->sqlInsertId = mysqli_insert_id();
 			if($this->sqlInsertId == '' || $this->sqlInsertId == NULL){
 				if(USE_FIREPHP){$firephp->log('did not insert the new id into $this->sqlInsertId.');}
 				return FALSE;
@@ -140,13 +135,13 @@
 		$this->sql = $sql;
 		
 		// DO QUERY
-		$result = mysql_query($sql);
+		$result = mysqli_query($sql);
 		
-		if(mysql_errno() != 0){
+		if(mysqli_errno() != 0){
 			// I'm trying to decouple the parts of this function, and also make the code easier to read
-			$this->setError(array('Sql'=>$sql,'Error'=>mysql_error()));
+			$this->setError(array('Sql'=>$sql,'Error'=>mysqli_error()));
 			$this->setErrorFlag(TRUE);
-			if(USE_FIREPHP){$firephp->log( array('error'=>mysql_error(),'sql'=>$sql),'CURR coreModel.php,SQL ERROR');}
+			if(USE_FIREPHP){$firephp->log( array('error'=>mysqli_error(),'sql'=>$sql),'CURR coreModel.php,SQL ERROR');}
 			return FALSE;
 		}else{
 			return TRUE;
@@ -176,7 +171,7 @@
 		$this->sql = $sql;
 		
 		// DO QUERY
-		$result = mysql_query($sql);
+		$result = mysqli_query($sql);
 		
 		// GET ARRAY FROM $result
 		
@@ -185,11 +180,11 @@
 		
 		
 		// ERROR CHECKING
-		if(mysql_errno() != 0){
+		if(mysqli_errno() != 0){
 			// I'm trying to decouple the parts of this function, and also make the code easier to read
-			$this->setError(array('Sql'=>$sql,'Error'=>mysql_error()));
+			$this->setError(array('Sql'=>$sql,'Error'=>mysqli_error()));
 			$this->setErrorFlag(TRUE);
-			if(USE_FIREPHP){$firephp->log( array('error'=>mysql_error(),'sql'=>$sql),'CURR coreModel.php,SQL ERROR');}
+			if(USE_FIREPHP){$firephp->log( array('error'=>mysqli_error(),'sql'=>$sql),'CURR coreModel.php,SQL ERROR');}
 			return FALSE;
 		}else{
 			return TRUE;
@@ -204,13 +199,13 @@
 		$this->sql = $sql;
 		
 		// DO QUERY
-		$result = mysql_query($sql);
+		$result = mysqli_query($sql);
 		
-		if(mysql_errno() != 0){
+		if(mysqli_errno() != 0){
 			// I'm trying to decouple the parts of this function, and also make the code easier to read
-			$this->setError(array('Sql'=>$sql,'Error'=>mysql_error()));
+			$this->setError(array('Sql'=>$sql,'Error'=>mysqli_error()));
 			$this->setErrorFlag(TRUE);
-			if(USE_FIREPHP){$firephp->log( array('error'=>mysql_error(),'sql'=>$sql),'CURR coreModel.php,SQL ERROR');}
+			if(USE_FIREPHP){$firephp->log( array('error'=>mysqli_error(),'sql'=>$sql),'CURR coreModel.php,SQL ERROR');}
 			return FALSE;
 		}else{
 			return TRUE;
@@ -253,17 +248,17 @@
 		$this->sql = $sql;
 		
 		// DO QUERY
-		$result = mysql_query($sql);
+		$result = mysqli_query($sql);
 
 		// PROCESS THE RESULT OF THE QUERY
-		if(mysql_errno() != 0 || !is_resource($result)){
+		if(mysqli_errno() != 0 || !is_resource($result)){
 			// I'm trying to decouple the parts of this function, and also make the code easier to read
 			$err = TRUE;
 		}
 		
 		if(preg_match('`select`',$sql,$matches) || preg_match('`SELECT`',$sql,$matches)){
 			if(!$err){
-				$num_rows = mysql_num_rows($result);
+				$num_rows = mysqli_num_rows($result);
 				
 			}
 		}
@@ -272,7 +267,7 @@
 		}
 		if(preg_match('`insert\sinto`',$sql,$matches) || preg_match('`INSERT\sINTO`',$sql,$matches)){
 			if(!$err)
-				$insertId = mysql_insert_id($result);
+				$insertId = mysqli_insert_id($result);
 
 		}
 		if(preg_match('`delete`',$sql,$matches) || preg_match('`DELETE`',$sql,$matches)){
@@ -290,11 +285,11 @@
 		// error codes
 		if($err){
 			$this->setError(array(
-				'error'=>mysql_error(),
+				'error'=>mysqli_error(),
 				'sql'=>$sql
 			));
 			$this->setErrorFlag(TRUE);
-			if(USE_FIREPHP){$firephp->log( array('error'=>mysql_error(),'sql'=>$sql),'CURR coreModel.php,SQL ERROR');}
+			if(USE_FIREPHP){$firephp->log( array('error'=>mysqli_error(),'sql'=>$sql),'CURR coreModel.php,SQL ERROR');}
 		}
 		
 		// insert ID
@@ -326,14 +321,14 @@
 				if(is_array($value)){
 					foreach($value as $key=>$data){
 						if(is_numeric($data)) $clean[$index][$key] = trim($data);
-						else $clean[$index][$key] = mysql_real_escape_string(trim($data));
+						else $clean[$index][$key] = mysqli_real_escape_string(trim($data));
 					}
 				}elseif(is_numeric($value)) {$clean[$index] = trim($value);}
-				elseif($index != ('extraHTML' || 'theLimiter')){ $clean[$index][$key] = mysql_real_escape_string(trim($value));}
+				elseif($index != ('extraHTML' || 'theLimiter')){ $clean[$index][$key] = mysqli_real_escape_string(trim($value));}
 				else{$clean[$index] = trim($value); }
 			}
 		}else{
-			$clean = mysql_real_escape_string(trim($theValue));
+			$clean = mysqli_real_escape_string(trim($theValue));
 		}
 		return $clean;
 	}
@@ -404,7 +399,7 @@
 	}
 	
 	private function setInsertId(){
-		$this->sqlInsertId = mysql_insert_id();
+		$this->sqlInsertId = mysqli_insert_id();
 	}
 	
 	private function setCount($num){
