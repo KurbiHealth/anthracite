@@ -19,8 +19,12 @@ class coreView{
 		
 		// get the flashmessage array and include in $pageData
 		// NOTE: flash messages don't apply when request is ajax
+		// $flashMsg should be an array like so:
+		//  'type' => $type,
+		//  'title' => $title,
+		//  'body' => $payload
 		$flashMsg = $this->getFlashMessage();
-
+		
 		// create the $body variable by putting the template into it, or showing 
 		// $pageData if there is no template to be found
 		if(is_file($template)){
@@ -52,7 +56,7 @@ class coreView{
 		// the value of $msg will be an array, with the following keys:
 		// 	[type] = 'url' or 'text'
 		//	[title]
-		//	[url] or [text], goes along with [type]
+		//	[body] = either a url or a text message
 		$msg = $session->getFlashMessage();
 		return $msg;
 	}

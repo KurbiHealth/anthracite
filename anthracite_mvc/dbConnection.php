@@ -7,14 +7,14 @@ class dbConnection {
 	function __construct(){
 		$reg = getRegistryClass();
 		$dbConf = $reg->get('db_conf');
-		$this->connection = mysql_connect("$this->dbhost:$this->dbport",$this->dbuser,$this->dbpass);
-		if(!$this->dbLink){
-			die('Unable to connect to the database: '.mysql_error());
+		$this->connection = mysqli_connect("$this->dbhost:$this->dbport",$this->dbuser,$this->dbpass);
+		if(!$this->connection){
+			die('Unable to connect to the database in anthracite_mvc/dbConnection at line : '.__LINE__;
 		}
 		
-		$db_selected = mysql_select_db($this->dbname,$this->dbLink);
+		$db_selected = mysqli_select_db($this->dbname,$this->connection);
 		if(!$db_selected){
-			die('Unable to use the database: '.$this->dbname.' : '.mysql_error());
+			die('Unable to use the database: '.$this->dbname.' : '.mysqli_error());
 		}
 	}
 	

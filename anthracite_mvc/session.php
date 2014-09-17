@@ -33,30 +33,27 @@ class session{
 		// THESE LINES ONLY WORK IN 5.4
 		// PHP_SESSION_NONE if sessions are enabled, but none exists.
 		// PHP_SESSION_ACTIVE if sessions are enabled, and one exists.
-		//if($this->isLoggedIn == TRUE && session_status() == PHP_SESSION_NONE){
-			
-		if($this->isLoggedIn == TRUE){
-			/*$setting = 'session.use_trans_sid';
-		    $current = ini_get($setting);
-		    if (FALSE === $current)
-		    {
-		        throw new UnexpectedValueException(sprintf('Setting %s does not exists.', $setting));
-		    }
-		    $result = @ini_set($setting, $current); 
-		    $return = $result !== $current;
-			
-			$this->isLoggedIn = $return;
-			return $return;*/
-			return TRUE;
-		}elseif($this->isLoggedIn == FALSE)
+		if(session_status() == PHP_SESSION_NONE){
 			return FALSE;
-		else
-			return TRUE;
-	}	
+		}else{
+			if($this->isLoggedIn == TRUE){
+				return TRUE;
+			}elseif($this->isLoggedIn == FALSE){
+				return FALSE;
+			}
+		}
+	}
 	
-	public function setFlashMessage($message){
-		// $message should be an array
-		$_SESSION['flashMessage'] = $message;
+	public function setFlashMessage($type = '',$title = '',$message){
+		// $message should be an array like:
+		// 'type' => $type,
+		// 'title' => $title,
+		// 'body' => $payload
+		$_SESSION['flashMessage'] = array(
+			'body' => $message,
+			'type' => $type,
+			'title' => $title
+		);
 	}
 	
 	public function getFlashMessage(){

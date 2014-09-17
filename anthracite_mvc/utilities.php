@@ -57,7 +57,7 @@ function currentCareTeam(){
 	// 1a. get the user's record
 	$sql = 'SELECT * FROM care_team WHERE role_id='.$userId.' AND role=\''.USER_ROLE.'\'';
 	$result = mysqli_query($dbConn,$sql);
-	if(is_resource($result)){
+	if(is_object($result)){
 		$numRows = mysqli_num_rows($result);
 		if($numRows > 0){
 			$userRecord = mysqli_fetch_assoc($result);
@@ -69,7 +69,7 @@ function currentCareTeam(){
 	if(USE_FIREPHP){$firephp->log(array($dbConn,$sql),'--$dbConn and $sql at line '.__LINE__);}
 	
 	$result = mysqli_query($dbConn,$sql);
-	if(is_resource($result)){
+	if(is_object($result)){
 		$numRows = mysqli_num_rows($result);
 		if($numRows > 0){
 			while($row = mysqli_fetch_assoc($result)){
@@ -159,7 +159,7 @@ echo $role.'<br/>';exit;
 	// 1a. get the user's record
 	$sql = 'SELECT * FROM care_team WHERE role_id='.$userId.' AND accepted=1';
 	$result = mysqli_query($dbConn,$sql);
-	if(is_resource($result)){
+	if(is_object($result)){
 		$numRows = mysqli_num_rows($result);
 		if($numRows > 0){
 			while($row = mysqli_fetch_assoc($result)){
@@ -177,7 +177,7 @@ echo '<pre>';print_r($userRecords);echo '</pre>';
 		if(USE_FIREPHP){$firephp->log(array($dbConn,$sql),'--$dbConn and $sql at line '.__LINE__);}
 		
 		$result = mysqli_query($dbConn,$sql);
-		if(is_resource($result)){
+		if(is_object($result)){
 			$numRows = mysqli_num_rows($result);
 			if($numRows > 0){
 				while($row = mysqli_fetch_assoc($result)){
@@ -226,7 +226,7 @@ function getAllPatientsForDoctor(){
 	// 1a. get the user's record
 	$sql = 'SELECT * FROM care_team WHERE role_id='.$userId.' AND accepted=1';
 	$result = mysqli_query($dbConn,$sql);
-	if(is_resource($result)){
+	if(is_object($result)){
 		$numRows = mysqli_num_rows($result);
 		if($numRows > 0){
 			while($row = mysqli_fetch_assoc($result)){
@@ -247,7 +247,7 @@ function getAllPatientsForDoctor(){
 		if(USE_FIREPHP){$firephp->log(array($dbConn,$sql),'--$dbConn and $sql at line '.__LINE__);}
 		
 		$result = mysqli_query($dbConn,$sql);
-		if(is_resource($result)){
+		if(is_object($result)){
 			$numRows = mysqli_num_rows($result);
 			if($numRows > 0){
 				$return[] = mysqli_fetch_assoc($result);
@@ -271,7 +271,7 @@ function _getFromDatabase($sql){
 
 	$result = mysqli_query($dbConn,$sql);
 	
-	if(is_resource($result)){
+	if(is_object($result)){
 		$numRows = mysqli_num_rows($result);
 		if($numRows == 1){
 			$return = mysqli_fetch_assoc($result);
@@ -393,7 +393,7 @@ function redirect($url){
 function send_email($text,$to=array(),$from=array(),$subject='',$htmlText){
 	global $firephp;
 	require_once PATH_TO_MVC_LIBRARIES.'/swiftMailer/Swift-4.3.1/lib/swift_required.php';
-return $from;	
+	
 	/**
 	 * Create the message
 	 * @tutorial http://swiftmailer.org/docs/messages.html
@@ -434,7 +434,7 @@ return $from;
 	return $result;
 }
 
-function cleanmysqliDate($date){
+function cleanMysqlDate($date){
 	$tempDate = explode('-',$date);
 	if(isset($tempDate[1]) && isset($tempDate[2]) && isset($tempDate[0]))
 		$cleanDate = $tempDate[1].'/'.$tempDate[2].'/'.$tempDate[0];
@@ -446,7 +446,7 @@ function cleanmysqliDate($date){
 /**
  * format should come in as 05/29/1973, and should get converted to 1973-05-29
  */
-function convertTomysqliDate($date){
+function convertToMysqlDate($date){
 	// check to make sure it's not already in mysqli format, i.e. has "-" instead of "/"
 	if(substr_count($date,'/') > 0){
 		$tempDate = explode('/',$date);
@@ -541,12 +541,11 @@ function sendMessage($personId,$textonlyMessage,$formattedMessage){
 	
 }
 
+/**
+ * There's only a "set" for FlashMessage cause flash messages are a one way proposition. A flash message is set in a model, and retrieved by the coreView class
+ */
 function setFlashMessage($type='',$title='',$payload=''){
 	$reg = registry::singleton();
 	$session = $reg->get('sessionSingleton');
-	$session->setFlashMessage(array(
-		'type' => $type,
-		'title' => $title,
-		'text' => $payload
-	));
+	$session->setFlashMessage($type,$title,$payload);
 }

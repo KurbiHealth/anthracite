@@ -4,6 +4,14 @@ if(USE_FIREPHP){$firephp->log('CURR - bootstrap.php');}
 if(USE_FIREPHP){$firephp->log($_FILES ,'$_FILES in bootstrap, line '.__LINE__);}
 if(USE_FIREPHP){$firephp->log($_SERVER ,'$_SERVER[CONTENT_LENGTH] in bootstrap, line '.__LINE__);}
 
+/**
+ * SECURE THE APP
+ */
+/*if(defined(SECURE_APP) && SECURE_APP == TRUE)){
+	if($_SERVER[''] == 'http:'){
+
+	}
+}*/
 
 /**
  * APP GROUP CONFIGURATIONS
@@ -63,7 +71,7 @@ try{
     echo 'Caught exception: ',  $e->getMessage(), "\n";
 }
 
-if(!$conn){die('Unable to connect to the database: '.mysql_error().', in bootstrap, line '.__LINE__.'.');}
+if(!$conn){die('Unable to connect to the database: '.mysqli_error($conn).', in bootstrap, line '.__LINE__.'.');}
 
 if(!$reg->set('databaseConnectionSingleton',$conn)){die('Unable to save the database connection to registry in boostrap.');}
 

@@ -42,7 +42,7 @@
 		}else{
 			$this->dbLink = mysqli_connect("$this->dbhost:$this->dbport",$this->dbuser,$this->dbpass,$this->dbname);
 			if(!$this->dbLink){
-				die('Unable to connect to the database: '.mysql_error());
+				die('Unable to connect to the database in CoreModel at line: '.__LINE__);
 			}
 		}
 		
@@ -89,19 +89,19 @@ $this->urlkey = md5('d,k72@sKp1Q94', true); // For demonstration purpose
 		$this->sql = $sql;
 		
 		// DO QUERY
-		$result = mysqli_query($sql);
+		$result = mysqli_query($this->dbLink,$sql);
 
-		if(mysqli_errno() != 0){
+		if(mysqli_errno($this->dbLink) != 0){
 			// I'm trying to decouple the parts of this function, and also make the code easier to read
 			$this->setError(array(
-				'error'=>mysqli_error(),
+				'error'=>mysqli_error($this->dbLink),
 				'sql'=>$sql
 			));
 			$this->setErrorFlag(TRUE);
-			if(USE_FIREPHP){$firephp->log( array('error'=>mysqli_error(),'sql'=>$sql),'CURR coreModel.php,SQL ERROR');}
+			if(USE_FIREPHP){$firephp->log( array('error'=>mysqli_error($this->dbLink),'sql'=>$sql),'CURR coreModel.php,SQL ERROR');}
 			return FALSE;
 		}else{
-			$this->sqlInsertId = mysqli_insert_id();
+			$this->sqlInsertId = mysqli_insert_id($this->dbLink);
 			if($this->sqlInsertId == '' || $this->sqlInsertId == NULL){
 				if(USE_FIREPHP){$firephp->log('did not insert the new id into $this->sqlInsertId.');}
 				return FALSE;
@@ -135,13 +135,13 @@ $this->urlkey = md5('d,k72@sKp1Q94', true); // For demonstration purpose
 		$this->sql = $sql;
 		
 		// DO QUERY
-		$result = mysqli_query($sql);
+		$result = mysqli_query($this->dbLink,$sql);
 		
-		if(mysqli_errno() != 0){
+		if(mysqli_errno($this->dbLink) != 0){
 			// I'm trying to decouple the parts of this function, and also make the code easier to read
-			$this->setError(array('Sql'=>$sql,'Error'=>mysqli_error()));
+			$this->setError(array('Sql'=>$sql,'Error'=>mysqli_error($this->dbLink)));
 			$this->setErrorFlag(TRUE);
-			if(USE_FIREPHP){$firephp->log( array('error'=>mysqli_error(),'sql'=>$sql),'CURR coreModel.php,SQL ERROR');}
+			if(USE_FIREPHP){$firephp->log( array('error'=>mysqli_error($this->dbLink),'sql'=>$sql),'CURR coreModel.php,SQL ERROR');}
 			return FALSE;
 		}else{
 			return TRUE;
@@ -171,7 +171,7 @@ $this->urlkey = md5('d,k72@sKp1Q94', true); // For demonstration purpose
 		$this->sql = $sql;
 		
 		// DO QUERY
-		$result = mysqli_query($sql);
+		$result = mysqli_query($this->dbLink,$sql);
 		
 		// GET ARRAY FROM $result
 		
@@ -180,11 +180,11 @@ $this->urlkey = md5('d,k72@sKp1Q94', true); // For demonstration purpose
 		
 		
 		// ERROR CHECKING
-		if(mysqli_errno() != 0){
+		if(mysqli_errno($this->dbLink) != 0){
 			// I'm trying to decouple the parts of this function, and also make the code easier to read
-			$this->setError(array('Sql'=>$sql,'Error'=>mysqli_error()));
+			$this->setError(array('Sql'=>$sql,'Error'=>mysqli_error($this->dbLink)));
 			$this->setErrorFlag(TRUE);
-			if(USE_FIREPHP){$firephp->log( array('error'=>mysqli_error(),'sql'=>$sql),'CURR coreModel.php,SQL ERROR');}
+			if(USE_FIREPHP){$firephp->log( array('error'=>mysqli_error($this->dbLink),'sql'=>$sql),'CURR coreModel.php,SQL ERROR');}
 			return FALSE;
 		}else{
 			return TRUE;
@@ -199,13 +199,13 @@ $this->urlkey = md5('d,k72@sKp1Q94', true); // For demonstration purpose
 		$this->sql = $sql;
 		
 		// DO QUERY
-		$result = mysqli_query($sql);
+		$result = mysqli_query($this->dbLink,$sql);
 		
-		if(mysqli_errno() != 0){
+		if(mysqli_errno($this->dbLink) != 0){
 			// I'm trying to decouple the parts of this function, and also make the code easier to read
-			$this->setError(array('Sql'=>$sql,'Error'=>mysqli_error()));
+			$this->setError(array('Sql'=>$sql,'Error'=>mysqli_error($this->dbLink)));
 			$this->setErrorFlag(TRUE);
-			if(USE_FIREPHP){$firephp->log( array('error'=>mysqli_error(),'sql'=>$sql),'CURR coreModel.php,SQL ERROR');}
+			if(USE_FIREPHP){$firephp->log( array('error'=>mysqli_error($this->dbLink),'sql'=>$sql),'CURR coreModel.php,SQL ERROR');}
 			return FALSE;
 		}else{
 			return TRUE;
@@ -248,10 +248,10 @@ $this->urlkey = md5('d,k72@sKp1Q94', true); // For demonstration purpose
 		$this->sql = $sql;
 		
 		// DO QUERY
-		$result = mysqli_query($sql);
+		$result = mysqli_query($this->dbLink,$sql);
 
 		// PROCESS THE RESULT OF THE QUERY
-		if(mysqli_errno() != 0 || !is_resource($result)){
+		if(mysqli_errno( $this->dbLink ) != 0 || !is_object($result)){
 			// I'm trying to decouple the parts of this function, and also make the code easier to read
 			$err = TRUE;
 		}
@@ -285,11 +285,11 @@ $this->urlkey = md5('d,k72@sKp1Q94', true); // For demonstration purpose
 		// error codes
 		if($err){
 			$this->setError(array(
-				'error'=>mysqli_error(),
+				'error'=>mysqli_error($this->dbLink),
 				'sql'=>$sql
 			));
 			$this->setErrorFlag(TRUE);
-			if(USE_FIREPHP){$firephp->log( array('error'=>mysqli_error(),'sql'=>$sql),'CURR coreModel.php,SQL ERROR');}
+			if(USE_FIREPHP){$firephp->log( array('error'=>mysqli_error($this->dbLink),'sql'=>$sql),'CURR coreModel.php,SQL ERROR');}
 		}
 		
 		// insert ID
@@ -321,14 +321,14 @@ $this->urlkey = md5('d,k72@sKp1Q94', true); // For demonstration purpose
 				if(is_array($value)){
 					foreach($value as $key=>$data){
 						if(is_numeric($data)) $clean[$index][$key] = trim($data);
-						else $clean[$index][$key] = mysqli_real_escape_string(trim($data));
+						else $clean[$index][$key] = mysqli_real_escape_string($this->dbLink,trim($data));
 					}
 				}elseif(is_numeric($value)) {$clean[$index] = trim($value);}
-				elseif($index != ('extraHTML' || 'theLimiter')){ $clean[$index][$key] = mysqli_real_escape_string(trim($value));}
+				elseif($index != ('extraHTML' || 'theLimiter')){ $clean[$index][$key] = mysqli_real_escape_string($this->dbLink,trim($value));}
 				else{$clean[$index] = trim($value); }
 			}
 		}else{
-			$clean = mysqli_real_escape_string(trim($theValue));
+			$clean = mysqli_real_escape_string($this->dbLink,trim($theValue));
 		}
 		return $clean;
 	}
@@ -399,7 +399,7 @@ $this->urlkey = md5('d,k72@sKp1Q94', true); // For demonstration purpose
 	}
 	
 	private function setInsertId(){
-		$this->sqlInsertId = mysqli_insert_id();
+		$this->sqlInsertId = mysqli_insert_id($this->dbLink);
 	}
 	
 	private function setCount($num){

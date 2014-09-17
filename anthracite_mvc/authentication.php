@@ -27,6 +27,7 @@ class authentication{
  */
 
 	public function pageCanBeSentToUser(){
+		$return = TRUE;
 
 		if(USE_FIREPHP){$this->firephp->log( 'in class Authentication, line '.__LINE__ );}
 		
@@ -35,7 +36,7 @@ class authentication{
 			if(USE_FIREPHP){$this->firephp->log( $this->queryString,'--Page requested is sign_in or sign_up, CONTINUING THROUGH, line '.__LINE__ );}
 			$return = TRUE;
 		}
-		
+
 		// if protected page, and no session established (user hasn't logged in or doesn't have an account), do not allow
 		if($this->pageIsProtected() && ($this->Session->getLoggedInStatus() == FALSE)){
 			if(USE_FIREPHP){$this->firephp->log('--Page is protected, and not logged in, line '.__LINE__);}
@@ -54,7 +55,7 @@ class authentication{
 			if(USE_FIREPHP){$this->firephp->log('--Page is NOT protected, continue on, line '.__LINE__);}
 			$return = TRUE;
 		}
-	
+
 		return $return;
 	}
 
