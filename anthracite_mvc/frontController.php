@@ -15,7 +15,7 @@ class frontController extends coreController{
 	 */
 
 	 /**
-	  * @param  
+	  * @param
 	  */
 	 function start(){
 	 	if(!defined('USE_FIREPHP'))

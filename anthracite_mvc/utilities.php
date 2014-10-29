@@ -105,14 +105,15 @@ function currentCareTeam(){
 	if($userRecord['patient_id'] != $userId){
 		$sql = 'SELECT * FROM patients JOIN people ON (patients.person_id=people.id) WHERE patients.id='.$userRecord['patient_id'];
 		$result = mysqli_query($dbConn,$sql);
-		if($numRows2 > 0){
+		$numRows = mysqli_num_rows($result);
+		if($numRows > 0){
 			$temp = mysqli_fetch_assoc($result);
-		}
-		
+
 /* ---------- ADD DECRYPTION HERE ---------- */
-		
-		// expand the $careTeam array to include information from "people" table
-		$return[] = $temp;
+			
+			// expand the $careTeam array to include information from "people" table
+			$return[] = $temp;
+		}
 	}
 	
 	return $return;
@@ -221,10 +222,10 @@ function getAllPatientsForDoctor(){
 
 	$userId = $_SESSION['userId'];
 	$role = $_SESSION['userRole'];
-	
+
 	// 1. get all care team members
 	// 1a. get the user's record
-	$sql = 'SELECT * FROM care_team WHERE role_id='.$userId.' AND accepted=1';
+	$sql = 'SELECT * FROM care_team_members JOIN care_teams ON (care_team_members.care_team_id=care_teams.id) WHERE role="doctors" AND care_team_members.role_id='.$userId.' AND care_team_members.accepted=1';
 	$result = mysqli_query($dbConn,$sql);
 	if(is_object($result)){
 		$numRows = mysqli_num_rows($result);
@@ -548,4 +549,27 @@ function setFlashMessage($type='',$title='',$payload=''){
 	$reg = registry::singleton();
 	$session = $reg->get('sessionSingleton');
 	$session->setFlashMessage($type,$title,$payload);
+}
+
+/**
+ *
+ */
+
+function getRolesForPerson($personId){
+	// check to see if the array of roles already exists in $_SESSION
+
+	// using $personId, check each role table (doctors, friendsfamily, patients) for a record with that person_id
+
+	// set up an array in SESSION var with roles and role_ids
+
+}
+
+function rolesHtmlDropdown(){
+	/*
+		<ul>
+		<li><a href="<?php echo FRIENDSFAMILY_APP; ?>/sign_in/switching_roles">Supporter Role</a></li>
+		<li><a href="<?php echo PATIENT_APP; ?>/sign_in/switching_roles">Patient Role</a></li>
+		<li><a href="<?php echo DOCTORS_APP; ?>/sign_in/switching_roles">Dr/Nurse Role</a></li>
+	</ul>	
+	*/
 }
