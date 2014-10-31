@@ -33,7 +33,7 @@ function currentUser(){
 	$user = _getFromDatabase($sql);
 
 /* ---------- ADD DECRYPTION HERE ---------- */
-	
+
 	return $user;
 }
 
@@ -44,7 +44,10 @@ function currentCareTeam(){
 	
 	if(!isset($_SESSION['userId']))
 		return FALSE;
-	
+
+	$userRecord = array();
+	$careTeamId = '';
+
 	$reg = registry::singleton();
 	$dbConn = $reg->get('databaseConnectionSingleton');
 	
@@ -54,20 +57,45 @@ function currentCareTeam(){
 	$role = $_SESSION['userRole'];
 	
 	// 1. get all care team members
-	// 1a. get the user's record
-	$sql = 'SELECT * FROM care_team WHERE role_id='.$userId.' AND role=\''.USER_ROLE.'\'';
-	$result = mysqli_query($dbConn,$sql);
-	if(is_object($result)){
-		$numRows = mysqli_num_rows($result);
-		if($numRows > 0){
-			$userRecord = mysqli_fetch_assoc($result);
+	// 1a. get the user's care_team_id value
+	if(USER_ROLE == 'patients'){
+		$sql = 'SELECT * FROM care_teams WHERE patient_id='.$userId;
+		$result = mysqli_query($dbConn,$sql);
+		if(is_object($result)){
+			$numRows = mysqli_num_rows($result);
+			if($numRows > 0){
+				$temp = mysqli_fetch_assoc($result);
+				$careTeamId = $temp['id'];
+			}else{
+				return FALSE;
+			}
+		}else{
+			return FALSE;
+		}
+	}else{
+		$sql = 'SELECT * FROM care_team_members WHERE role_id='.$userId.' AND role=\''.USER_ROLE.'\'';
+		$result = mysqli_query($dbConn,$sql);
+		if(is_object($result)){
+			$numRows = mysqli_num_rows($result);
+			if($numRows > 0){
+				if($numRows == 1){
+					$temp = mysqli_fetch_assoc($result);
+					$careTeamId = $temp['care_team_id'];
+				}elseif($numRows > 1){
+					/* @TODO add option to allow user to choose which patient they are currently supporting (i.e. which care_team to use) */
+					$temp = mysqli_fetch_assoc($result);
+					$careTeamId = $temp['care_team_id'];
+				}
+			}else{
+				return FALSE;
+			}
+		}else{
+			return FALSE;
 		}
 	}
-	
-	// 1b. use the user's record to get all members of the careteam
-	$sql = 'SELECT * FROM care_team WHERE patient_id='.$userRecord['patient_id'].' AND accepted=1';
-	if(USE_FIREPHP){$firephp->log(array($dbConn,$sql),'--$dbConn and $sql at line '.__LINE__);}
-	
+
+	// 1b. use the care_team_members records to get role & people info
+	$sql = 'SELECT * FROM care_team_members WHERE care_team_id='.$careTeamId;
 	$result = mysqli_query($dbConn,$sql);
 	if(is_object($result)){
 		$numRows = mysqli_num_rows($result);
@@ -75,18 +103,21 @@ function currentCareTeam(){
 			while($row = mysqli_fetch_assoc($result)){
 				$return[] = $row;
 			}
-//echo '<pre>';var_dump($return);echo '</pre>';exit;
 			foreach($return as $key => $teamMember){
-//echo '<pre>';var_dump($teamMember);echo '</pre>';
-				$sql  = 'SELECT * FROM '.$teamMember['role'].' JOIN people ON (people.id=';
-				$sql .= $teamMember['role'].'.person_id) WHERE '.$teamMember['role'].'.id='.$teamMember['role_id'];
+				$sql  = 'SELECT * FROM '.$teamMember['role'].' JOIN people ON (people.id='.$teamMember['role'].'.person_id) WHERE '.$teamMember['role'].'.id='.$teamMember['role_id'];
 				$result2 = mysqli_query($dbConn,$sql);
-				$numRows2 = mysqli_num_rows($result2);
-				if($numRows2 > 0){
-					$temp = mysqli_fetch_assoc($result2);
-				}
+				if(is_object($result2)){
+					$numRows2 = mysqli_num_rows($result2);
+
+					if($numRows2 > 0){
+						$temp = mysqli_fetch_assoc($result2);
 
 /* ---------- ADD DECRYPTION HERE ---------- */
+
+					}
+				}else{
+					echo $sql.'<br/>';
+				}
 				
 				// expand the $careTeam array to include information from "people" table
 				foreach($temp as $key2=>$tempValue)
@@ -99,21 +130,6 @@ function currentCareTeam(){
 	}else{
 		if(USE_FIREPHP){$firephp->log('--mysqli call did not work, at line '.__LINE__);}
 		$return = FALSE;
-	}
-	
-	// 2. add the patient if it's not the current user
-	if($userRecord['patient_id'] != $userId){
-		$sql = 'SELECT * FROM patients JOIN people ON (patients.person_id=people.id) WHERE patients.id='.$userRecord['patient_id'];
-		$result = mysqli_query($dbConn,$sql);
-		$numRows = mysqli_num_rows($result);
-		if($numRows > 0){
-			$temp = mysqli_fetch_assoc($result);
-
-/* ---------- ADD DECRYPTION HERE ---------- */
-			
-			// expand the $careTeam array to include information from "people" table
-			$return[] = $temp;
-		}
 	}
 	
 	return $return;
